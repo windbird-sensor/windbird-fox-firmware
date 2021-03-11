@@ -1,6 +1,10 @@
 # pioupiou-wind-sensor
 Source files for the Pioupiou V1 Firmware
 
+# DEPRECATION NOTICE
+**This repository is no longer active.**
+
+**Please move to the new project: https://github.com/windbird-sensor/windbird-firmware**
 
 ## License
 
