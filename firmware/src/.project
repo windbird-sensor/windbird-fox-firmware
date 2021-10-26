@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>firmware</name>
+	<name>windbird-firmware</name>
 	<comment></comment>
 	<projects>
 		<project>Device</project>
@@ -10,6 +10,7 @@
 		<project>libtdgeoloc</project>
 		<project>libtdrf</project>
 		<project>libtdsensor</project>
+		<project>libtdtools</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
