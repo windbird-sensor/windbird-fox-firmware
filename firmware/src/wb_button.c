@@ -1,6 +1,6 @@
 /**************************************************************************
- * @file pp_button.c
- * @brief Button API for PIOUPIOU's firmware
+ * @file WB_button.c
+ * @brief Button API for WINDBIRD's firmware
  * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
@@ -9,9 +9,9 @@
  * (C) Copyright 2021 OpenWindMap SCIC SA
  ******************************************************************************
  *
- * This file is a part of PIOUPIOU WIND SENSOR.
+ * This file is a part of WINDBIRD WIND SENSOR.
  * Any use of this source code is subject to the license detailed at
- * https://github.com/pioupiou-archive/pioupiou-v1-firmware/blob/master/README.md
+ * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
  
@@ -19,8 +19,8 @@
 #include <td_core.h>
 
 
-#include "pp_debug.h"
-#include "pp_button.h"
+#include "wb_debug.h"
+#include "wb_button.h"
 
 #define BUTTON_PORT gpioPortB
 #define BUTTON_BIT 11
@@ -36,7 +36,7 @@ static void InterruptCallback(uint32_t mask) {
 	buttonPressedEvent=true;
 }
 
-void PP_BUTTON_Init() {
+void WB_BUTTON_Init() {
 
 	int type;
 	IRQn_Type irq_parity;
@@ -59,9 +59,9 @@ void PP_BUTTON_Init() {
 	NVIC_EnableIRQ(irq_parity);
 }
 
-PP_BUTTON_State_t PP_BUTTON_Loop() {
+WB_BUTTON_State_t WB_BUTTON_Loop() {
 
-	PP_BUTTON_State_t state = PP_BUTTON_NO_ACTION;
+	WB_BUTTON_State_t state = WB_BUTTON_NO_ACTION;
 
 	uint32_t duration = 0;
 
@@ -74,14 +74,14 @@ PP_BUTTON_State_t PP_BUTTON_Loop() {
 		buttonPressedEvent = 0;
 
 		if (duration == DELAY_CALIBRATION) {
-			state = PP_BUTTON_PRESSED_CALIBRATION;
+			state = WB_BUTTON_PRESSED_CALIBRATION;
 		} else if (duration > DELAY_TOO_LONG) {
 			// nop
 		} else if (duration >= DELAY_DEBOUNCING) {
-			state = PP_BUTTON_PRESSED_POWER_SWITCH;
+			state = WB_BUTTON_PRESSED_POWER_SWITCH;
 		}
 
-		PP_DEBUG("button event duration : %d\n", duration);
+		WB_DEBUG("button event duration : %d\n", duration);
 	}
 
 	return state;

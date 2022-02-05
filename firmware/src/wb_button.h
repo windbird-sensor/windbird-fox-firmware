@@ -1,6 +1,6 @@
 /**************************************************************************
- * @file pp_gps.h
- * @brief GPS API for PIOUPIOU's firmware
+ * @file WB_button.h
+ * @brief Button API for WINDBIRD's firmware
  * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
@@ -9,25 +9,23 @@
  * (C) Copyright 2021 OpenWindMap SCIC SA
  ******************************************************************************
  *
- * This file is a part of PIOUPIOU WIND SENSOR.
+ * This file is a part of WINDBIRD WIND SENSOR.
  * Any use of this source code is subject to the license detailed at
- * https://github.com/pioupiou-archive/pioupiou-v1-firmware/blob/master/README.md
+ * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
  
-#ifndef PP_GPS_H_
-#define PP_GPS_H_
+#ifndef WB_BUTTON_H_
+#define WB_BUTTON_H_
 
-typedef struct {
-	int32_t latitude;
-	int32_t longitude;
-	int16_t altitude;
-	uint8_t hdop;
-} PP_GPS_Fix_t;
+typedef enum {
+	WB_BUTTON_NO_ACTION,
+	WB_BUTTON_PRESSED_POWER_SWITCH,
+	WB_BUTTON_PRESSED_CALIBRATION,
+	} WB_BUTTON_State_t;
 
-void PP_GPS_Init();
-bool PP_GPS_Locate();
-void PP_GPS_PowerOn(uint16_t timeout);
-void PP_GPS_PowerOff();
+void WB_BUTTON_Init();
 
-#endif /* PP_GPS_H_ */
+WB_BUTTON_State_t WB_BUTTON_Loop();
+
+#endif /* WB_BUTTON_H_ */

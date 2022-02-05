@@ -1,6 +1,6 @@
 /**************************************************************************
- * @file pp_sigfox.c
- * @brief Sigfox API for PIOUPIOU's firmware
+ * @file WB_sigfox.c
+ * @brief Sigfox API for WINDBIRD's firmware
  * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
@@ -9,16 +9,16 @@
  * (C) Copyright 2021 OpenWindMap SCIC SA
  ******************************************************************************
  *
- * This file is a part of PIOUPIOU WIND SENSOR.
+ * This file is a part of WINDBIRD WIND SENSOR.
  * Any use of this source code is subject to the license detailed at
- * https://github.com/pioupiou-archive/pioupiou-v1-firmware/blob/master/README.md
+ * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
 
 #include <td_sigfox.h>
 #include <td_measure.h>
-#include "pp_sigfox.h"
-#include "pp_debug.h"
+#include "wb_sigfox.h"
+#include "wb_debug.h"
 
 //#define DEBUG_NO_SIGFOX
 
@@ -30,10 +30,10 @@
 // for compliance with ETSI EN 300-220
 
 #ifdef DEBUG_NO_SIGFOX
-#define SIGFOX_SEND(...) PP_DEBUG_DUMP("sigfox", __VA_ARGS__)
+#define SIGFOX_SEND(...) WB_DEBUG_DUMP("sigfox", __VA_ARGS__)
 #else
 #define SIGFOX_SEND(...) \
-  PP_DEBUG_DUMP("sigfox= ", __VA_ARGS__); \
+  WB_DEBUG_DUMP("sigfox= ", __VA_ARGS__); \
   TD_SIGFOX_SendV1(MODE_FRAME, 0, __VA_ARGS__, SIGFOX_RETRIES, 0, 0)
 #endif
 
@@ -100,13 +100,13 @@ static void EncodeFloat(uint8_t *target, float *value) {
   memcpy(target, value, sizeof(float));
 }
 
-void PP_SIGFOX_Init () {
+void WB_SIGFOX_Init () {
 
   TD_SIGFOX_RfPower(SIGFOX_MAX_TX_POWER);
 
 }
 
-void PP_SIGFOX_StartupMessage (float windSpeed, float windHeading) {
+void WB_SIGFOX_StartupMessage (float windSpeed, float windHeading) {
 
   message[0]= SIGFOX_STARTUP_MESSAGE | EncodeWindHeading(windHeading);
   message[1]=EncodeWindSpeed(windSpeed);
@@ -126,13 +126,13 @@ void PP_SIGFOX_StartupMessage (float windSpeed, float windHeading) {
   SIGFOX_SEND(message, 10);
 }
 
-void PP_SIGFOX_ShutdownMessage () {
+void WB_SIGFOX_ShutdownMessage () {
   message[0]= SIGFOX_SHUTDOWN_MESSAGE;
   message[1]=TD_MEASURE_VoltageTemperature(false); //voltage
   SIGFOX_SEND(message, 2);
 }
 
-void PP_SIGFOX_LocationMessage (PP_GPS_Fix_t fix) {
+void WB_SIGFOX_LocationMessage (WB_GPS_Fix_t fix) {
     //message[0]=SIGFOX_LOCATION_MESSAGE;
     message[0]=fix.latitude & 0xFF;
     message[1]=(fix.latitude >> 8) & 0xFF;
@@ -148,12 +148,12 @@ void PP_SIGFOX_LocationMessage (PP_GPS_Fix_t fix) {
   SIGFOX_SEND(message, 11);
 }
 
-void PP_SIGFOX_LocationFailureMessage () {
+void WB_SIGFOX_LocationFailureMessage () {
   message[0]=SIGFOX_LOCATION_FAILURE_MESSAGE;
   SIGFOX_SEND(message, 1);
 }
 
-void PP_SIGFOX_ReportMessage(PP_REPORTS_Report_t *report, uint8_t reportCount) {
+void WB_SIGFOX_ReportMessage(WB_REPORTS_Report_t *report, uint8_t reportCount) {
 
   uint8_t headingAvg[reportCount];
   uint8_t speedMax[reportCount];
@@ -187,7 +187,7 @@ void PP_SIGFOX_ReportMessage(PP_REPORTS_Report_t *report, uint8_t reportCount) {
   SIGFOX_SEND(message, 12);
 }
 
-void PP_SIGFOX_MonitoringMessage(float tempMin, float tempAvg, float tempMax, float voltageMin, float voltageAvg, float voltageMax) {
+void WB_SIGFOX_MonitoringMessage(float tempMin, float tempAvg, float tempMax, float voltageMin, float voltageAvg, float voltageMax) {
 
   message[0]=SIGFOX_MONITORING_MESSAGE;
   message[1]=EncodeTemperature(tempMin);
@@ -200,7 +200,7 @@ void PP_SIGFOX_MonitoringMessage(float tempMin, float tempAvg, float tempMax, fl
   SIGFOX_SEND(message, 7);
 }
 
-void PP_SIGFOX_CalibrationMessage(float yOffset, float yScale, float zOffset, float zScale) {
+void WB_SIGFOX_CalibrationMessage(float yOffset, float yScale, float zOffset, float zScale) {
 
   message[0]=SIGFOX_CALIBRATION_MESSAGE_A;
   EncodeFloat(&message[1], &yOffset);

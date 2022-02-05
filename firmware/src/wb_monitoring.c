@@ -1,6 +1,6 @@
 /**************************************************************************
- * @file pp_monitoring.c
- * @brief Monitoring API for PIOUPIOU's firmware
+ * @file WB_monitoring.c
+ * @brief Monitoring API for WINDBIRD's firmware
   * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
@@ -9,9 +9,9 @@
  * (C) Copyright 2021 OpenWindMap SCIC SA
  ******************************************************************************
  *
- * This file is a part of PIOUPIOU WIND SENSOR.
+ * This file is a part of WINDBIRD WIND SENSOR.
  * Any use of this source code is subject to the license detailed at
- * https://github.com/pioupiou-archive/pioupiou-v1-firmware/blob/master/README.md
+ * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
 #include <em_emu.h>
@@ -19,14 +19,14 @@
 #include <td_measure.h>
 #include <td_scheduler.h>
 #include <td_rtc.h>
-#include "pp_reports.h"
-#include "pp_debug.h"
-#include "pp_sigfox.h"
-#include "pp_gps.h"
-#include "pp_button.h"
-#include "pp_reports.h"
-#include "pp_monitoring.h"
-#include "pp_compass.h"
+#include "wb_reports.h"
+#include "wb_debug.h"
+#include "wb_sigfox.h"
+#include "wb_gps.h"
+#include "wb_button.h"
+#include "wb_reports.h"
+#include "wb_monitoring.h"
+#include "wb_compass.h"
 
 #define GPS_AUTOLOCATE_TIMEOUT 100
 
@@ -97,59 +97,59 @@ static void WatchTimer (uint32_t argument, uint8_t repetition) {
 }
 
 static void AutoLocate () {
-  PP_GPS_PowerOn(GPS_AUTOLOCATE_TIMEOUT);
-  while ((!PP_GPS_Locate()) && (PP_BUTTON_Loop() != PP_BUTTON_PRESSED_POWER_SWITCH)) {
+  WB_GPS_PowerOn(GPS_AUTOLOCATE_TIMEOUT);
+  while ((!WB_GPS_Locate()) && (WB_BUTTON_Loop() != WB_BUTTON_PRESSED_POWER_SWITCH)) {
     TD_RTC_Sleep();
   }
-  PP_GPS_PowerOff();
+  WB_GPS_PowerOff();
 }
 
 static void DailyTimer (uint32_t argument, uint8_t repetition) {
-  PP_REPORTS_Pause();
+  WB_REPORTS_Pause();
 
   tempAvg /= tempCount;
   voltageAvg /= voltageCount;
 
-  PP_SIGFOX_MonitoringMessage(tempMin, tempAvg, tempMax, voltageMin, voltageAvg, voltageMax);
+  WB_SIGFOX_MonitoringMessage(tempMin, tempAvg, tempMax, voltageMin, voltageAvg, voltageMax);
 
   if (dayCount % AUTOLOCATE_PERIOD == AUTOLOCATE_PERIOD - 1) {
-    PP_DEBUG("autolocate\n");
+    WB_DEBUG("autolocate\n");
     AutoLocate();
   }
 
   ResetProbes();
 
   // reinit the compass in case it lost its configuration
-  PP_COMPASS_Init();
+  WB_COMPASS_Init();
 
-  PP_REPORTS_Resume();
+  WB_REPORTS_Resume();
 
   dayCount++;
 }
 
 static void FirstAutoLocateTimer (uint32_t argument, uint8_t repetition) {
-  PP_REPORTS_Pause();
+  WB_REPORTS_Pause();
 
-  PP_DEBUG("autolocate\n");
+  WB_DEBUG("autolocate\n");
   AutoLocate();
 
-  PP_REPORTS_Resume();
+  WB_REPORTS_Resume();
 
 }
 
-void PP_MONITORING_Init () {
+void WB_MONITORING_Init () {
 
-  if (!TD_WATCHDOG_Init(WATCHDOG_TIMEOUT)) PP_DEBUG("Watchdog failed\n");
+  if (!TD_WATCHDOG_Init(WATCHDOG_TIMEOUT)) WB_DEBUG("Watchdog failed\n");
   TD_WATCHDOG_Enable(true, false);
 
   watchTimer = TD_SCHEDULER_Append(WATCH_PERIOD, 0, 0, TD_SCHEDULER_INFINITE, WatchTimer, 0);
-  if (watchTimer == 0xFF) PP_DEBUG("ERROR initializing MONITORING watchTimer\n");
+  if (watchTimer == 0xFF) WB_DEBUG("ERROR initializing MONITORING watchTimer\n");
 
   dailyTimer = TD_SCHEDULER_Append(DAILY_PERIOD, 0, 0, TD_SCHEDULER_INFINITE, DailyTimer, 0);
-  if (dailyTimer == 0xFF) PP_DEBUG("ERROR initializing MONITORING dailyTimer\n");
+  if (dailyTimer == 0xFF) WB_DEBUG("ERROR initializing MONITORING dailyTimer\n");
 
   firstAutoLocateTimer = TD_SCHEDULER_Append(FIRST_AUTOLOCATE_PERIOD, 0, 0, 1, FirstAutoLocateTimer, 0);
-  if (firstAutoLocateTimer == 0xFF) PP_DEBUG("ERROR initializing MONITORING dailyTimer\n");
+  if (firstAutoLocateTimer == 0xFF) WB_DEBUG("ERROR initializing MONITORING dailyTimer\n");
 
   dayCount = 0;
 

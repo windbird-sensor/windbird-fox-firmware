@@ -1,6 +1,6 @@
 /**************************************************************************
- * @file pp_button.h
- * @brief Button API for PIOUPIOU's firmware
+ * @file WB_led.h
+ * @brief LED API for WINDBIRD's firmware
  * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
@@ -9,23 +9,19 @@
  * (C) Copyright 2021 OpenWindMap SCIC SA
  ******************************************************************************
  *
- * This file is a part of PIOUPIOU WIND SENSOR.
+ * This file is a part of WINDBIRD WIND SENSOR.
  * Any use of this source code is subject to the license detailed at
- * https://github.com/pioupiou-archive/pioupiou-v1-firmware/blob/master/README.md
+ * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
- 
-#ifndef PP_BUTTON_H_
-#define PP_BUTTON_H_
+#ifndef WB_LED_H_
+#define WB_LED_H_
 
-typedef enum {
-	PP_BUTTON_NO_ACTION,
-	PP_BUTTON_PRESSED_POWER_SWITCH,
-	PP_BUTTON_PRESSED_CALIBRATION,
-	} PP_BUTTON_State_t;
+void WB_LED_Init();
+void WB_LED_Test();
+void WB_LED_Clear();
+void WB_LED_Set();
+void WB_LED_StartBlink(uint8_t seconds, uint16_t ticks);
+void WB_LED_StopBlink();
 
-void PP_BUTTON_Init();
-
-PP_BUTTON_State_t PP_BUTTON_Loop();
-
-#endif /* PP_BUTTON_H_ */
+#endif /* WB_LED_H_ */

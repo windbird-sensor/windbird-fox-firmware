@@ -1,6 +1,6 @@
 /**************************************************************************
- * @file pp_i2c.c
- * @brief I2C API for PIOUPIOU's firmware
+ * @file WB_i2c.c
+ * @brief I2C API for WINDBIRD's firmware
   * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
@@ -9,9 +9,9 @@
  * (C) Copyright 2021 OpenWindMap SCIC SA
  ******************************************************************************
  *
- * This file is a part of PIOUPIOU WIND SENSOR.
+ * This file is a part of WINDBIRD WIND SENSOR.
  * Any use of this source code is subject to the license detailed at
- * https://github.com/pioupiou-archive/pioupiou-v1-firmware/blob/master/README.md
+ * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
 
@@ -32,7 +32,7 @@
 
 /** Initialize I2C0
  */
-void PP_I2C_Init() {
+void WB_I2C_Init() {
 	CMU_ClockEnable(cmuClock_I2C0, true);
 
 	GPIO_PinModeSet(I2C_SDA_PORT, I2C_SDA_PIN, I2C_SDA_MODE, I2C_SDA_DOUT);
@@ -50,7 +50,7 @@ void PP_I2C_Init() {
 /** Enable or disable I2C
  * @param isEnabled true = enable, false = disable
  */
-void PP_I2C_Enable(bool isEnabled) {
+void WB_I2C_Enable(bool isEnabled) {
 
  I2C_Enable(I2C0, isEnabled);
  CMU_ClockEnable(cmuClock_I2C0, isEnabled);
@@ -80,7 +80,7 @@ I2C_TransferReturn_TypeDef Transfer(I2C_TransferSeq_TypeDef *seq, uint16_t timeo
  * @param timeout Optional read timeout in milliseconds (0 to disable, leave off to use default class value in I2Cdev::readTimeout)
  * @return I2C_TransferReturn_TypeDef http://downloads.energymicro.com/documentation/doxygen/group__I2C.html
  */
-int8_t PP_I2C_ReadBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout) {
+int8_t WB_I2C_ReadBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout) {
 
 	I2C_TransferSeq_TypeDef seq;
 
@@ -113,8 +113,8 @@ int8_t PP_I2C_ReadBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_
  * @param timeout Optional read timeout in milliseconds (0 to disable, leave off to use default class value in I2Cdev::readTimeout)
  * @return Status of read operation (true = success)
  */
-int8_t PP_I2C_ReadByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint16_t timeout) {
-	return PP_I2C_ReadBytes(devAddr, regAddr, 1, data, timeout);
+int8_t WB_I2C_ReadByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint16_t timeout) {
+	return WB_I2C_ReadBytes(devAddr, regAddr, 1, data, timeout);
 }
 
 
@@ -124,7 +124,7 @@ int8_t PP_I2C_ReadByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint16_t
  * @param data New byte value to write
  * @return Status of operation (true = success)
  */
-bool PP_I2C_WriteByte(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint16_t timeout) {
+bool WB_I2C_WriteByte(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint16_t timeout) {
 
   I2C_TransferSeq_TypeDef seq;
 

@@ -1,6 +1,6 @@
 /**************************************************************************
  * @file firmware.c
- * @brief Main program functions for PIOUPIOU's firmware
+ * @brief Main program functions for WINDBIRD's firmware
  * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
@@ -9,9 +9,9 @@
  * (C) Copyright 2021 OpenWindMap SCIC SA
  ******************************************************************************
  *
- * This file is a part of PIOUPIOU WIND SENSOR.
+ * This file is a part of WINDBIRD WIND SENSOR.
  * Any use of this source code is subject to the license detailed at
- * https://github.com/pioupiou-archive/pioupiou-v1-firmware/blob/master/README.md
+ * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
  
@@ -24,17 +24,17 @@
 #include <td_sigfox.h>
 #include <td_utils.h>
 
-#include "pp_debug.h"
-#include "pp_led.h"
-#include "pp_button.h"
-#include "pp_gps.h"
-#include "pp_i2c.h"
-#include "pp_pressure.h"
-#include "pp_compass.h"
-#include "pp_sigfox.h"
-#include "pp_propeller.h"
-#include "pp_reports.h"
-#include "pp_monitoring.h"
+#include "wb_debug.h"
+#include "wb_led.h"
+#include "wb_button.h"
+#include "wb_gps.h"
+#include "wb_i2c.h"
+#include "wb_pressure.h"
+#include "wb_compass.h"
+#include "wb_sigfox.h"
+#include "wb_propeller.h"
+#include "wb_reports.h"
+#include "wb_monitoring.h"
 
 
 #define MODULE_REVISION REVISION_TD1208
@@ -58,65 +58,65 @@
 static void Shutdown() {
 
 	// shutdown is engaged
-	PP_DEBUG("turn off\n");
+	WB_DEBUG("turn off\n");
 
-	PP_REPORTS_Stop();
-	PP_GPS_PowerOff();
+	WB_REPORTS_Stop();
+	WB_GPS_PowerOff();
 
 	int i;
 	for (i=0; i<5; i++) {
-		PP_LED_Clear();
+		WB_LED_Clear();
 		TD_RTC_Delay(TMS(200));
-		PP_LED_Set();
+		WB_LED_Set();
 		TD_RTC_Delay(TMS(200));
 	}
-	PP_LED_Clear();
+	WB_LED_Clear();
 
-	PP_SIGFOX_ShutdownMessage();
+	WB_SIGFOX_ShutdownMessage();
 
 	EMU_EnterEM3(true);
 	// ACTUAL "SHUTDOWN" is HERE
 	// the system will wake next time we press the button
 
-	PP_LED_Set(); // user feedback
+	WB_LED_Set(); // user feedback
 	TD_RTC_Delay(TMS(2000));
 
 	NVIC_SystemReset(); // so we start fresh
 }
 
 static void Calibration() {
-	PP_LED_StartBlink(0, TMS(100));
+	WB_LED_StartBlink(0, TMS(100));
 
-	PP_GPS_PowerOff();
-	PP_REPORTS_Stop();
+	WB_GPS_PowerOff();
+	WB_REPORTS_Stop();
 
 	TD_RTC_Delay(TMS(5000));
 
-	PP_LED_StopBlink();
-	PP_LED_Set();
+	WB_LED_StopBlink();
+	WB_LED_Set();
 
 	TD_RTC_Delay(TMS(1000));
-	PP_COMPASS_Calibrate();
-	PP_LED_Clear();
+	WB_COMPASS_Calibrate();
+	WB_LED_Clear();
 
-	PP_COMPASS_SaveCalibration();
+	WB_COMPASS_SaveCalibration();
 
-	//PP_COMPASS_TestCalibration();
+	//WB_COMPASS_TestCalibration();
 
-	PP_REPORTS_Start();
+	WB_REPORTS_Start();
 }
 
 static void ButtonLoop() {
-	switch (PP_BUTTON_Loop()) {
-		case PP_BUTTON_NO_ACTION:
-			//PP_DEBUG("button no action\n");
+	switch (WB_BUTTON_Loop()) {
+		case WB_BUTTON_NO_ACTION:
+			//WB_DEBUG("button no action\n");
 			break;
-		case PP_BUTTON_PRESSED_POWER_SWITCH:
-			PP_DEBUG("button power switch\n");
+		case WB_BUTTON_PRESSED_POWER_SWITCH:
+			WB_DEBUG("button power switch\n");
 			Shutdown();
 			break;
-		case PP_BUTTON_PRESSED_CALIBRATION:
-			PP_DEBUG("button calibration\n");
+		case WB_BUTTON_PRESSED_CALIBRATION:
+			WB_DEBUG("button calibration\n");
 			Calibration();
 			break;
 	}
@@ -127,43 +127,43 @@ void TD_USER_Setup(void) {
 	// init serial port for GPS and DEBUG.
 	init_printf(TD_UART_Init(9600, true, false), TD_UART_Putc, TD_UART_Start, TD_UART_Stop);
 
-	PP_DEBUG("*** HELLO ***\n");
-	PP_DEBUG("Device ID : %x\n", TD_SIGFOX_GetId());
+	WB_DEBUG("*** HELLO ***\n");
+	WB_DEBUG("Device ID : %x\n", TD_SIGFOX_GetId());
 
-	PP_MONITORING_Init();
-	PP_REPORTS_Init();
-	PP_LED_Init();
-	PP_BUTTON_Init();
-	PP_GPS_Init();
-	PP_I2C_Init();
-	PP_PRESSURE_Shutdown();
-	PP_COMPASS_Init();
-	PP_SIGFOX_Init();
-	PP_PROPELLER_Init();
+	WB_MONITORING_Init();
+	WB_REPORTS_Init();
+	WB_LED_Init();
+	WB_BUTTON_Init();
+	WB_GPS_Init();
+	WB_I2C_Init();
+	WB_PRESSURE_Shutdown();
+	WB_COMPASS_Init();
+	WB_SIGFOX_Init();
+	WB_PROPELLER_Init();
 
-	//PP_COMPASS_TestCalibration();
+	//WB_COMPASS_TestCalibration();
 
-	PP_LED_Set();
+	WB_LED_Set();
 	TD_RTC_Delay(TMS(3000)); // wait for windspeed acquisition
-	float windSpeed = PP_PROPELLER_GetSpeed();
-	float windHeading = PP_COMPASS_GetHeading();
-	PP_SIGFOX_StartupMessage(windSpeed, windHeading);
+	float windSpeed = WB_PROPELLER_GetSpeed();
+	float windHeading = WB_COMPASS_GetHeading();
+	WB_SIGFOX_StartupMessage(windSpeed, windHeading);
 
-	PP_GPS_PowerOn(300);
-	while (!PP_GPS_Locate()) {
-		PP_LED_Clear();
+	WB_GPS_PowerOn(300);
+	while (!WB_GPS_Locate()) {
+		WB_LED_Clear();
 		ButtonLoop();
 		TD_RTC_Sleep();
-		PP_LED_Set();
+		WB_LED_Set();
 	}
-	PP_LED_Clear();
-	PP_GPS_PowerOff();
+	WB_LED_Clear();
+	WB_GPS_PowerOff();
 
-	PP_REPORTS_Start();
+	WB_REPORTS_Start();
 
 }
 
 void TD_USER_Loop(void) {
-	PP_DEBUG("*** loop ***\t%d\n", TD_STACK_Usage());
+	WB_DEBUG("*** loop ***\t%d\n", TD_STACK_Usage());
 	ButtonLoop();
 }

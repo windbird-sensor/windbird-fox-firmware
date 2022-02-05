@@ -1,6 +1,6 @@
 /**************************************************************************
- * @file pp_led.c
- * @brief LED API for PIOUPIOU's firmware
+ * @file WB_led.c
+ * @brief LED API for WINDBIRD's firmware
   * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
@@ -9,9 +9,9 @@
  * (C) Copyright 2021 OpenWindMap SCIC SA
  ******************************************************************************
  *
- * This file is a part of PIOUPIOU WIND SENSOR.
+ * This file is a part of WINDBIRD WIND SENSOR.
  * Any use of this source code is subject to the license detailed at
- * https://github.com/pioupiou-archive/pioupiou-v1-firmware/blob/master/README.md
+ * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
 
@@ -20,8 +20,8 @@
 #include <em_letimer.h>
 #include <td_rtc.h>
 #include <td_scheduler.h>
-#include "pp_debug.h"
-#include "pp_led.h"
+#include "wb_debug.h"
+#include "wb_led.h"
 
 #define LED_GREEN_PORT gpioPortD
 #define LED_GREEN_BIT 6
@@ -38,7 +38,7 @@ static void BlinkTimer (uint32_t argument, uint8_t repetition) {
 	}
 }
 
-void PP_LED_Init() {
+void WB_LED_Init() {
 	GPIO_DriveModeSet(LED_RED_PORT, gpioDriveModeHigh);
 
 	GPIO_PinModeSet(LED_GREEN_PORT, LED_GREEN_BIT, gpioModePushPull, 0);
@@ -47,16 +47,16 @@ void PP_LED_Init() {
 	timer = 0xFF;
 }
 
-void PP_LED_Clear() {
+void WB_LED_Clear() {
 	GPIO_PinOutClear(LED_RED_PORT, LED_RED_BIT);
 }
 
 
-void PP_LED_Set() {
+void WB_LED_Set() {
 	GPIO_PinOutSet(LED_RED_PORT, LED_RED_BIT);
 }
 
-void PP_LED_Test() {
+void WB_LED_Test() {
 	int i;
 	for (i=0; i<6; i++) {
 		GPIO_PinOutToggle(LED_RED_PORT, LED_RED_BIT);
@@ -64,21 +64,21 @@ void PP_LED_Test() {
 	}
 }
 
-void PP_LED_StartBlink(uint8_t seconds, uint16_t ticks) {
+void WB_LED_StartBlink(uint8_t seconds, uint16_t ticks) {
 	if (timer != 0xFF) {
 		TD_SCHEDULER_Remove(timer);
 		timer = 0xFF;
 	}
 	timer = TD_SCHEDULER_AppendIrq(seconds, ticks, 0, TD_SCHEDULER_INFINITE, BlinkTimer, 0);
-	if (timer == 0xFF) PP_DEBUG("ERROR initializing led blink timer\n");
+	if (timer == 0xFF) WB_DEBUG("ERROR initializing led blink timer\n");
 	isBlinking = true;
 }
 
-void PP_LED_StopBlink() {
+void WB_LED_StopBlink() {
 	if (timer != 0xFF) {
 		TD_SCHEDULER_Remove(timer);
 		timer = 0xFF;
 	}
 	isBlinking = false;
-	PP_LED_Clear();
+	WB_LED_Clear();
 }

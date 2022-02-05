@@ -1,6 +1,6 @@
 /**************************************************************************
- * @file pp_propeller.h
- * @brief Propeller Sensor API for PIOUPIOU's firmware
+ * @file debug.h
+ * @brief Debug functions for WINDBIRD's firmware
  * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
@@ -9,16 +9,21 @@
  * (C) Copyright 2021 OpenWindMap SCIC SA
  ******************************************************************************
  *
- * This file is a part of PIOUPIOU WIND SENSOR.
+ * This file is a part of WINDBIRD WIND SENSOR.
  * Any use of this source code is subject to the license detailed at
- * https://github.com/pioupiou-archive/pioupiou-v1-firmware/blob/master/README.md
+ * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
-#ifndef PP_PROPELLER_H_
-#define PP_PROPELLER_H_
+#ifndef WB_DEBUG_H_
+#define WB_DEBUG_H_
 
-void PP_PROPELLER_Init();
-float PP_PROPELLER_GetSpeed();
-void PP_PROPELLER_Reset();
+#ifdef DEBUG_WINDBIRD
+#include <td_printf.h>
+#define WB_DEBUG(...) tfp_printf(__VA_ARGS__)
+#define WB_DEBUG_DUMP(...) tfp_dump(__VA_ARGS__)
+#else
+#define WB_DEBUG(...)
+#define WB_DEBUG_DUMP(...)
+#endif
 
-#endif /* PP_PROPELLER_H_ */
+#endif /* WB_DEBUG_H_ */

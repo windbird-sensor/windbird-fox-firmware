@@ -1,6 +1,6 @@
 /**************************************************************************
- * @file pp_pressure.c
- * @brief Pressure Sensor API for PIOUPIOU's firmware
+ * @file WB_pressure.c
+ * @brief Pressure Sensor API for WINDBIRD's firmware
   * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
@@ -9,15 +9,15 @@
  * (C) Copyright 2021 OpenWindMap SCIC SA
  ******************************************************************************
  *
- * This file is a part of PIOUPIOU WIND SENSOR.
+ * This file is a part of WINDBIRD WIND SENSOR.
  * Any use of this source code is subject to the license detailed at
- * https://github.com/pioupiou-archive/pioupiou-v1-firmware/blob/master/README.md
+ * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
 #include <td_rtc.h>
 
-#include "pp_debug.h"
-#include "pp_i2c.h"
+#include "wb_debug.h"
+#include "wb_i2c.h"
 
 #define LPS25_ADDRESS 0x5D
 #define LPS25_WHO_AM_I_REG 0x0F
@@ -43,55 +43,55 @@
 static uint8_t buffer[1];
 
 static bool IsDataReady() {
-	PP_I2C_ReadByte(LPS25_ADDRESS, LPS25_STATUS_REG, buffer, PP_I2C_DEFAULT_TIMEOUT);
+	WB_I2C_ReadByte(LPS25_ADDRESS, LPS25_STATUS_REG, buffer, WB_I2C_DEFAULT_TIMEOUT);
 	return (buffer[0] & LPS25_PD_AVAILABLE) == LPS25_PD_AVAILABLE;
 }
 
 static bool ConnectionTest () {
-	if (PP_I2C_ReadByte(LPS25_ADDRESS, LPS25_WHO_AM_I_REG, buffer, PP_I2C_DEFAULT_TIMEOUT) == 1) {
+	if (WB_I2C_ReadByte(LPS25_ADDRESS, LPS25_WHO_AM_I_REG, buffer, WB_I2C_DEFAULT_TIMEOUT) == 1) {
 		return buffer[0] == LPS25_WHO_AM_I_EXPECTED;
 	} else {
-		PP_DEBUG("!!! I2C ERROR !!! PP_PRESS_ConnectionTest\n");
+		WB_DEBUG("!!! I2C ERROR !!! WB_PRESS_ConnectionTest\n");
 		return false;
 	}
 }
 
-void PP_PRESSURE_Shutdown() {
-	PP_I2C_WriteByte(LPS25_ADDRESS, LPS25_CTRL_REG1, LPS25_CTRL_REG1_PWR_DOWN, PP_I2C_DEFAULT_TIMEOUT);
+void WB_PRESSURE_Shutdown() {
+	WB_I2C_WriteByte(LPS25_ADDRESS, LPS25_CTRL_REG1, LPS25_CTRL_REG1_PWR_DOWN, WB_I2C_DEFAULT_TIMEOUT);
 }
 
-void PP_PRESSURE_Startup() {
+void WB_PRESSURE_Startup() {
 	buffer[0]=LPS25_CTRL_REG1_OUTP_DTA_RATEBIT_ONESHOT | LPS25_CTRL_REG1_ACTIV_MOD;
-	PP_I2C_WriteByte(LPS25_ADDRESS, LPS25_CTRL_REG1, buffer[0], PP_I2C_DEFAULT_TIMEOUT);
+	WB_I2C_WriteByte(LPS25_ADDRESS, LPS25_CTRL_REG1, buffer[0], WB_I2C_DEFAULT_TIMEOUT);
 }
 
-void PP_PRESSURE_Init() {
-	PP_PRESSURE_Shutdown();
-	PP_PRESSURE_Startup();
+void WB_PRESSURE_Init() {
+	WB_PRESSURE_Shutdown();
+	WB_PRESSURE_Startup();
 }
 
-float PP_PRESSURE_Get() {
+float WB_PRESSURE_Get() {
 
-	if (!PP_I2C_WriteByte(LPS25_ADDRESS, LPS25_CTRL_REG2, LPS25_CTRL_REG2_ONE_SHOT, PP_I2C_DEFAULT_TIMEOUT)) return false;
+	if (!WB_I2C_WriteByte(LPS25_ADDRESS, LPS25_CTRL_REG2, LPS25_CTRL_REG2_ONE_SHOT, WB_I2C_DEFAULT_TIMEOUT)) return false;
 
 	TD_RTC_Delay(TMS(50));
 
 	if (!IsDataReady()) {
-		PP_DEBUG(" - PD_AVAILABLE extending delay\n");
+		WB_DEBUG(" - PD_AVAILABLE extending delay\n");
 		TD_RTC_Delay(TMS(20));
 		if (!IsDataReady()) {
-			PP_DEBUG(" - PD_AVAILABLE !!! TIMEOUT !!!\n");
+			WB_DEBUG(" - PD_AVAILABLE !!! TIMEOUT !!!\n");
 			return -1;
 		}
 	}
 
 	uint8_t pressXL, pressL, pressH;
 
-	if (PP_I2C_ReadByte(LPS25_ADDRESS, LPS25_PRESS_OUT_XL, buffer, PP_I2C_DEFAULT_TIMEOUT) != 1) return false;
+	if (WB_I2C_ReadByte(LPS25_ADDRESS, LPS25_PRESS_OUT_XL, buffer, WB_I2C_DEFAULT_TIMEOUT) != 1) return false;
 	pressXL=buffer[0];
-	if (PP_I2C_ReadByte(LPS25_ADDRESS, LPS25_PRESS_OUT_L, buffer, PP_I2C_DEFAULT_TIMEOUT) != 1) return false;
+	if (WB_I2C_ReadByte(LPS25_ADDRESS, LPS25_PRESS_OUT_L, buffer, WB_I2C_DEFAULT_TIMEOUT) != 1) return false;
 	pressL=buffer[0];
-	if (PP_I2C_ReadByte(LPS25_ADDRESS, LPS25_PRESS_OUT_H, buffer, PP_I2C_DEFAULT_TIMEOUT) != 1) return false;
+	if (WB_I2C_ReadByte(LPS25_ADDRESS, LPS25_PRESS_OUT_H, buffer, WB_I2C_DEFAULT_TIMEOUT) != 1) return false;
 	pressH=buffer[0];
 
 	uint32_t pressureRaw = (pressH << 16) + (pressL << 8) + pressXL;
@@ -99,9 +99,9 @@ float PP_PRESSURE_Get() {
 
 	/*uint8_t tempL, tempH;
 
-	if (PP_I2C_ReadByte(LPS25_ADDRESS, LPS25_TEMP_OUT_L, buffer, PP_I2C_DEFAULT_TIMEOUT) != 1) return false;
+	if (WB_I2C_ReadByte(LPS25_ADDRESS, LPS25_TEMP_OUT_L, buffer, WB_I2C_DEFAULT_TIMEOUT) != 1) return false;
 	tempL=buffer[0];
-	if (PP_I2C_ReadByte(LPS25_ADDRESS, LPS25_TEMP_OUT_H, buffer, PP_I2C_DEFAULT_TIMEOUT) != 1) return false;
+	if (WB_I2C_ReadByte(LPS25_ADDRESS, LPS25_TEMP_OUT_H, buffer, WB_I2C_DEFAULT_TIMEOUT) != 1) return false;
 	tempH=buffer[0];
 
 	int16_t temperatureRaw = (tempH << 8) | tempL;
@@ -109,18 +109,18 @@ float PP_PRESSURE_Get() {
 
 }
 
-bool PP_PRESSURE_Test(float *pressure) {
+bool WB_PRESSURE_Test(float *pressure) {
 
 	bool result = true;
 
 	if (!ConnectionTest()) {
-		PP_DEBUG("!!! FAIL !!! Connection test (result : %d, expected : %d)\n", buffer[0], LPS25_WHO_AM_I_EXPECTED);
+		WB_DEBUG("!!! FAIL !!! Connection test (result : %d, expected : %d)\n", buffer[0], LPS25_WHO_AM_I_EXPECTED);
 		result = false;
 	}
 
-	*pressure = PP_PRESSURE_Get();
+	*pressure = WB_PRESSURE_Get();
 	if (*pressure < 0) {
-		PP_DEBUG("!!! FAIL !!! Reading test\n");
+		WB_DEBUG("!!! FAIL !!! Reading test\n");
 		result = false;
 	}
 

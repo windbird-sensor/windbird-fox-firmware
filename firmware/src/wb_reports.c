@@ -1,6 +1,6 @@
 /**************************************************************************
- * @file pp_reports.c
- * @brief Reports API for PIOUPIOU's firmware
+ * @file WB_reports.c
+ * @brief Reports API for WINDBIRD's firmware
  * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
@@ -9,9 +9,9 @@
  * (C) Copyright 2021 OpenWindMap SCIC SA
  ******************************************************************************
  *
- * This file is a part of PIOUPIOU WIND SENSOR.
+ * This file is a part of WINDBIRD WIND SENSOR.
  * Any use of this source code is subject to the license detailed at
- * https://github.com/pioupiou-archive/pioupiou-v1-firmware/blob/master/README.md
+ * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
 
@@ -19,11 +19,11 @@
 #include <td_scheduler.h>
 #include <td_measure.h>
 #include <td_rtc.h>
-#include "pp_debug.h"
-#include "pp_reports.h"
-#include "pp_compass.h"
-#include "pp_propeller.h"
-#include "pp_sigfox.h"
+#include "wb_debug.h"
+#include "wb_reports.h"
+#include "wb_compass.h"
+#include "wb_propeller.h"
+#include "wb_sigfox.h"
 
 #define SAMPLE_PERIOD 2
 #define SAMPLE_PER_REPORT 120
@@ -31,7 +31,7 @@
 
 static bool isPaused;
 
-static PP_REPORTS_Report_t report[REPORT_COUNT];
+static WB_REPORTS_Report_t report[REPORT_COUNT];
 static uint8_t samplingTimer;
 static uint8_t reportIndex;
 
@@ -50,7 +50,7 @@ static void SamplingTimer(uint32_t argument, uint8_t repetition) {
 
 	if (isPaused) return;
 
-	float windSpeed = PP_PROPELLER_GetSpeed();
+	float windSpeed = WB_PROPELLER_GetSpeed();
 	if (windSpeed < 0) {
 		return; // we got a report with dt = 0, so ignore it
 	} else if (fabs(windSpeed) < 0.0001) {
@@ -64,7 +64,7 @@ static void SamplingTimer(uint32_t argument, uint8_t repetition) {
 	}
 	report[reportIndex].speedAvg += windSpeed;
 
-	float windHeading = PP_COMPASS_GetHeading();
+	float windHeading = WB_COMPASS_GetHeading();
 	report[reportIndex].headingX += windSpeed * cos(windHeading);
 	report[reportIndex].headingY += windSpeed * sin(windHeading);
 
@@ -73,7 +73,7 @@ static void SamplingTimer(uint32_t argument, uint8_t repetition) {
 
 	report[reportIndex].tempAvg += temperature;
 
-	PP_DEBUG("sample\t%d\t%d\t%d\t%d\t%d\n",
+	WB_DEBUG("sample\t%d\t%d\t%d\t%d\t%d\n",
 			(int)(windSpeed*10.),
 			(int)(float)(windHeading/M_PI*180.),
 			(int)temperature,
@@ -88,7 +88,7 @@ static void SamplingTimer(uint32_t argument, uint8_t repetition) {
 		report[reportIndex].speedAvg /= SAMPLE_PER_REPORT;
 		report[reportIndex].tempAvg /= SAMPLE_PER_REPORT;
 
-		PP_DEBUG("REPORT\t%d\t%d\t%d\t%d\t%d\t%d\n",
+		WB_DEBUG("REPORT\t%d\t%d\t%d\t%d\t%d\t%d\n",
 				(int)(report[reportIndex].speedAvg*10.),
 				(int)(report[reportIndex].speedMax*10.),
 				(int)(report[reportIndex].speedMin*10.),
@@ -97,7 +97,7 @@ static void SamplingTimer(uint32_t argument, uint8_t repetition) {
 				reportIndex);
 
 		if (reportIndex == REPORT_COUNT-1) {
-			PP_SIGFOX_ReportMessage(report, REPORT_COUNT);
+			WB_SIGFOX_ReportMessage(report, REPORT_COUNT);
 			reportIndex=0;
 		} else {
 			reportIndex++;
@@ -107,37 +107,37 @@ static void SamplingTimer(uint32_t argument, uint8_t repetition) {
 	}
 }
 
-void PP_REPORTS_Start() {
+void WB_REPORTS_Start() {
 	isPaused = false;
 	reportIndex = 0;
 	ResetCurrent();
-	PP_PROPELLER_Reset();
+	WB_PROPELLER_Reset();
 	if (samplingTimer != 0xFF) {
 		TD_SCHEDULER_Remove(samplingTimer);
 	}
 	samplingTimer = TD_SCHEDULER_Append(SAMPLE_PERIOD, 0, 0, TD_SCHEDULER_INFINITE, SamplingTimer, 0);
-	if (samplingTimer == 0xFF) PP_DEBUG("ERROR initializing REPORT samplingTimer\n");
+	if (samplingTimer == 0xFF) WB_DEBUG("ERROR initializing REPORT samplingTimer\n");
 }
 
-void PP_REPORTS_Stop() {
+void WB_REPORTS_Stop() {
 	if (samplingTimer != 0xFF) {
 		TD_SCHEDULER_Remove(samplingTimer);
 		samplingTimer = 0xFF;
 	}
 }
 
-void PP_REPORTS_Pause() {
+void WB_REPORTS_Pause() {
 	isPaused = true;
 }
 
-void PP_REPORTS_Resume() {
-	PP_PROPELLER_GetSpeed();
+void WB_REPORTS_Resume() {
+	WB_PROPELLER_GetSpeed();
 	// clean the pulse count (we may have missed some RTC overflows)
 
 	isPaused = false;
 }
 
-void PP_REPORTS_Init() {
+void WB_REPORTS_Init() {
 	samplingTimer = 0xFF;
 	isPaused = true;
 }

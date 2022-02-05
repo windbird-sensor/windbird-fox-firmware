@@ -1,6 +1,6 @@
 /**************************************************************************
- * @file pp_led.h
- * @brief LED API for PIOUPIOU's firmware
+ * @file WB_gps.h
+ * @brief GPS API for WINDBIRD's firmware
  * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
@@ -9,19 +9,25 @@
  * (C) Copyright 2021 OpenWindMap SCIC SA
  ******************************************************************************
  *
- * This file is a part of PIOUPIOU WIND SENSOR.
+ * This file is a part of WINDBIRD WIND SENSOR.
  * Any use of this source code is subject to the license detailed at
- * https://github.com/pioupiou-archive/pioupiou-v1-firmware/blob/master/README.md
+ * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
-#ifndef PP_LED_H_
-#define PP_LED_H_
+ 
+#ifndef WB_GPS_H_
+#define WB_GPS_H_
 
-void PP_LED_Init();
-void PP_LED_Test();
-void PP_LED_Clear();
-void PP_LED_Set();
-void PP_LED_StartBlink(uint8_t seconds, uint16_t ticks);
-void PP_LED_StopBlink();
+typedef struct {
+	int32_t latitude;
+	int32_t longitude;
+	int16_t altitude;
+	uint8_t hdop;
+} WB_GPS_Fix_t;
 
-#endif /* PP_LED_H_ */
+void WB_GPS_Init();
+bool WB_GPS_Locate();
+void WB_GPS_PowerOn(uint16_t timeout);
+void WB_GPS_PowerOff();
+
+#endif /* WB_GPS_H_ */

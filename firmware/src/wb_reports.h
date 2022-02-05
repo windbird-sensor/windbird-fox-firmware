@@ -1,6 +1,6 @@
 /**************************************************************************
- * @file pp_compass.h
- * @brief Compass Sensor API for PIOUPIOU's firmware
+ * @file WB_reports.h
+ * @brief Reports API for WINDBIRD's firmware
  * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
@@ -9,25 +9,32 @@
  * (C) Copyright 2021 OpenWindMap SCIC SA
  ******************************************************************************
  *
- * This file is a part of PIOUPIOU WIND SENSOR.
+ * This file is a part of WINDBIRD WIND SENSOR.
  * Any use of this source code is subject to the license detailed at
- * https://github.com/pioupiou-archive/pioupiou-v1-firmware/blob/master/README.md
+ * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
- 
-#ifndef PP_COMPASS_H_
-#define PP_COMPASS_H_
+
+#ifndef WB_REPORTS_H_
+#define WB_REPORTS_H_
 
 #include <stdint.h>
-#include <stdbool.h>
 
-void PP_COMPASS_Init();
-bool PP_COMPASS_Test();
-void PP_COMPASS_TestCalibration();
-bool PP_COMPASS_GetRaw(int16_t *x, int16_t *y, int16_t *z);
-float PP_COMPASS_GetHeading();
-void PP_COMPASS_Calibrate();
-void PP_COMPASS_SaveCalibration();
-void PP_COMPASS_ClearCalibration();
+typedef struct {
+	float speedMax;
+	float speedMin;
+	float speedAvg;
+	float headingX;
+	float headingY;
+	float headingAvg;
+	float tempAvg;
+	uint8_t samplesCount;
+} WB_REPORTS_Report_t;
 
-#endif /* PP_COMPASS_H_ */
+void WB_REPORTS_Init();
+void WB_REPORTS_Start();
+void WB_REPORTS_Stop();
+void WB_REPORTS_Pause();
+void WB_REPORTS_Resume();
+
+#endif /* WB_REPORTS_H_ */

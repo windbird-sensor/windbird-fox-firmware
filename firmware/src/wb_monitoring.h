@@ -1,6 +1,6 @@
 /**************************************************************************
- * @file pp_monitoring.h
- * @brief Monitoring API for PIOUPIOU's firmware
+ * @file WB_monitoring.h
+ * @brief Monitoring API for WINDBIRD's firmware
  * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
@@ -9,14 +9,14 @@
  * (C) Copyright 2021 OpenWindMap SCIC SA
  ******************************************************************************
  *
- * This file is a part of PIOUPIOU WIND SENSOR.
+ * This file is a part of WINDBIRD WIND SENSOR.
  * Any use of this source code is subject to the license detailed at
- * https://github.com/pioupiou-archive/pioupiou-v1-firmware/blob/master/README.md
+ * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
-#ifndef PP_MONITORING_H_
-#define PP_MONITORING_H_
+#ifndef WB_MONITORING_H_
+#define WB_MONITORING_H_
 
-void PP_MONITORING_Init();
+void WB_MONITORING_Init();
 
-#endif /* PP_MONITORING_H_ */
+#endif /* WB_MONITORING_H_ */
