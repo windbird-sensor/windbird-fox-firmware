@@ -1,5 +1,7 @@
-# pioupiou-wind-sensor
-Source files for the Pioupiou V1 Firmware
+# windbird-firmware
+Source files for the Windbird Firmware
+
+# THIS IS A WORK IN PROGRESS. NOT READY FOR USE
 
 ## License
 
@@ -7,7 +9,7 @@ Copyright (c) 2015 Bac Plus Zéro SAS
 
 Copyright (c) 2016 Altostratus SA
 
-Copyright (c) 2021 OpenWindMap SCIC SA and contributors
+Copyright (c) 2021-2022 OpenWindMap SCIC SA and contributors
 
 **Permission is granted to anyone to use this Material for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:**
 
