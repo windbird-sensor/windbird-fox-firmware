@@ -35,6 +35,7 @@
 #include "wb_propeller.h"
 #include "wb_reports.h"
 #include "wb_monitoring.h"
+#include "wb_power.h"
 
 
 
@@ -133,8 +134,21 @@ void TD_USER_Setup(void) {
 	WB_DEBUG("Device ID : %x\n", TD_SIGFOX_GetId());
 
 	WB_MONITORING_Init();
-	WB_REPORTS_Init();
+	WB_POWER_Init();
+
+	while (true) {
+		uint32_t voltage = WB_POWER_GetCapacitorMillivolts();
+		WB_DEBUG("vcap: %d mV\n", voltage);
+		if (voltage > 2500) break;
+		WB_LED_SetRed();
+		TD_RTC_Delay(TMS(2));
+		WB_LED_Clear();
+		TD_WATCHDOG_Feed();
+		TD_RTC_Delay(TMS(2000));
+	}
+
 	WB_LED_Init();
+	WB_REPORTS_Init();
 	WB_BUTTON_Init();
 	WB_GPS_Init();
 	WB_I2C_Init();
@@ -142,6 +156,17 @@ void TD_USER_Setup(void) {
 	WB_COMPASS_Init();
 	WB_SIGFOX_Init();
 	WB_PROPELLER_Init();
+
+	while (true) {
+		uint32_t voltage = WB_POWER_GetCapacitorMillivolts();
+		WB_DEBUG("vcap: %d mV\n", voltage);
+		if (voltage > 3300) break;
+		WB_LED_SetGreen();
+		TD_RTC_Delay(TMS(2));
+		WB_LED_Clear();
+		TD_WATCHDOG_Feed();
+		TD_RTC_Delay(TMS(2000));
+	}
 
 	//WB_COMPASS_TestCalibration();
 
@@ -151,21 +176,25 @@ void TD_USER_Setup(void) {
 	float windHeading = WB_COMPASS_GetHeading();
 	WB_SIGFOX_StartupMessage(windSpeed, windHeading);
 
+	// WB_GPS_PowerOn(30);
 	WB_GPS_PowerOn(300);
 	while (!WB_GPS_Locate()) {
 		WB_LED_Clear();
+		WB_DEBUG("vcap: %d mV\n", WB_POWER_GetCapacitorMillivolts());
+		WB_DEBUG("vbat: %d mV\n", WB_POWER_GetBatteryMillivolts());
 		ButtonLoop();
 		TD_RTC_Sleep();
 		WB_LED_SetGreen();
 	}
 	WB_LED_Clear();
 	WB_GPS_PowerOff();
-
 	WB_REPORTS_Start();
-
 }
 
 void TD_USER_Loop(void) {
 	WB_DEBUG("*** loop ***\t%d\n", TD_STACK_Usage());
 	ButtonLoop();
+	WB_DEBUG("vcap: %d mV\n", WB_POWER_GetCapacitorMillivolts());
+	WB_DEBUG("vbat: %d mV\n", WB_POWER_GetBatteryMillivolts());
 }
+
