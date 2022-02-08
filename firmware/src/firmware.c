@@ -37,10 +37,12 @@
 #include "wb_monitoring.h"
 
 
-#define MODULE_REVISION REVISION_TD1208
 
-#define TD_SENSOR_USE_CODE 0
-#define TD_GEOLOC_USE_CODE 0
+#define MODULE_REVISION REVISION_TD1208
+#define PRODUCT_LED_PORT LED_GREEN_PORT
+#define PRODUCT_LED_BIT LED_GREEN_BIT
+#define PRODUCT_LED_BLINK 1
+#define PRODUCT_LED_DRIVE gpioDriveModeLowest
 
 // Disabling the bootloader because I believe there is
 // a security issue in the current over-the-air
@@ -67,7 +69,7 @@ static void Shutdown() {
 	for (i=0; i<5; i++) {
 		WB_LED_Clear();
 		TD_RTC_Delay(TMS(200));
-		WB_LED_Set();
+		WB_LED_SetRed();
 		TD_RTC_Delay(TMS(200));
 	}
 	WB_LED_Clear();
@@ -78,7 +80,7 @@ static void Shutdown() {
 	// ACTUAL "SHUTDOWN" is HERE
 	// the system will wake next time we press the button
 
-	WB_LED_Set(); // user feedback
+	WB_LED_SetGreen(); // user feedback
 	TD_RTC_Delay(TMS(2000));
 
 	NVIC_SystemReset(); // so we start fresh
@@ -143,7 +145,7 @@ void TD_USER_Setup(void) {
 
 	//WB_COMPASS_TestCalibration();
 
-	WB_LED_Set();
+	WB_LED_SetGreen();
 	TD_RTC_Delay(TMS(3000)); // wait for windspeed acquisition
 	float windSpeed = WB_PROPELLER_GetSpeed();
 	float windHeading = WB_COMPASS_GetHeading();
@@ -154,7 +156,7 @@ void TD_USER_Setup(void) {
 		WB_LED_Clear();
 		ButtonLoop();
 		TD_RTC_Sleep();
-		WB_LED_Set();
+		WB_LED_SetGreen();
 	}
 	WB_LED_Clear();
 	WB_GPS_PowerOff();

@@ -23,11 +23,7 @@
 #include "wb_debug.h"
 #include "wb_led.h"
 
-#define LED_GREEN_PORT gpioPortD
-#define LED_GREEN_BIT 6
-
-#define LED_RED_PORT gpioPortD
-#define LED_RED_BIT 7
+// pins are defined in wb_led.h
 
 static uint8_t timer;
 static bool isBlinking;
@@ -39,6 +35,7 @@ static void BlinkTimer (uint32_t argument, uint8_t repetition) {
 }
 
 void WB_LED_Init() {
+	GPIO_DriveModeSet(LED_GREEN_PORT, gpioDriveModeHigh);
 	GPIO_DriveModeSet(LED_RED_PORT, gpioDriveModeHigh);
 
 	GPIO_PinModeSet(LED_GREEN_PORT, LED_GREEN_BIT, gpioModePushPull, 0);
@@ -49,8 +46,16 @@ void WB_LED_Init() {
 
 void WB_LED_Clear() {
 	GPIO_PinOutClear(LED_RED_PORT, LED_RED_BIT);
+	GPIO_PinOutClear(LED_GREEN_PORT, LED_GREEN_BIT);
 }
 
+void WB_LED_SetGreen() {
+	GPIO_PinOutSet(LED_GREEN_PORT, LED_GREEN_BIT);
+}
+
+void WB_LED_SetRed() {
+	GPIO_PinOutSet(LED_RED_PORT, LED_RED_BIT);
+}
 
 void WB_LED_Set() {
 	GPIO_PinOutSet(LED_RED_PORT, LED_RED_BIT);

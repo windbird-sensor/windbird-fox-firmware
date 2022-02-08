@@ -27,11 +27,8 @@
 #include "wb_debug.h"
 #include "wb_sigfox.h"
 
-#define GPS_POWER_PORT gpioPortB
-#define GPS_POWER_BIT 13
-
-#define GPS_BACKUP_PORT gpioPortC
-#define GPS_BACKUP_BIT 15
+#define GPS_POWER_PORT gpioPortC
+#define GPS_POWER_BIT 15
 
 #define BUFFER_SIZE 255
 
@@ -297,7 +294,6 @@ void WB_GPS_Init() {
 
 	// GPS is turned off at startup
 	GPIO_PinModeSet(GPS_POWER_PORT, GPS_POWER_BIT, gpioModePushPull, 0);
-	GPIO_PinModeSet(GPS_BACKUP_PORT, GPS_BACKUP_BIT, gpioModePushPull, 0);
 
 	gpsIsEnabled = false;
 	timeoutAlarm = 0xFF;
@@ -308,7 +304,6 @@ void WB_GPS_PowerOn(uint16_t timeout) {
 	WB_DEBUG("POWER ON GPS...");
 
 	GPIO_PinOutSet(GPS_POWER_PORT, GPS_POWER_BIT);
-	GPIO_PinOutSet(GPS_BACKUP_PORT, GPS_BACKUP_BIT);
 	gpsIsEnabled = true;
 	fixesCount = 0;
 	WB_DEBUG("OK\n");
@@ -329,7 +324,6 @@ void WB_GPS_PowerOff() {
 	WB_DEBUG("POWER OFF GPS...");
 
 	GPIO_PinOutClear(GPS_POWER_PORT, GPS_POWER_BIT);
-	GPIO_PinOutClear(GPS_BACKUP_PORT, GPS_BACKUP_BIT);
 	gpsIsEnabled = false;
 
 	if (timeoutAlarm != 0xFF) {
