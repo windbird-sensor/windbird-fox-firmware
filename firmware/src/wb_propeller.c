@@ -73,7 +73,7 @@ float WB_PROPELLER_GetSpeed() {
 	uint32_t now;
 	uint32_t dt;
 	uint16_t count;
-	float freq;
+	float kmh;
 
 	now = RTC_CounterGet();
 	count = PCNT_CounterGet(PCNT0) + 0xFF * overflowCount;
@@ -86,13 +86,13 @@ float WB_PROPELLER_GetSpeed() {
 	}
 
 	if (dt < 32768) {
-		freq = -1;
+		kmh = -1;
 	} else {
-		freq = count / (dt / 32768.) * PROPELLER_CALIBRATION;
+		kmh = count / (dt / 32768.) * PROPELLER_CALIBRATION;
 	}
 
 	WB_PROPELLER_Reset();
 
-	return freq;
+	return kmh;
 
 }
