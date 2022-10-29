@@ -16,6 +16,9 @@
 #ifndef WB_POWER_H_
 #define WB_POWER_H_
 
+#define VAUX_PORT gpioPortC
+#define VAUX_BIT 14
+
 void WB_POWER_Init();
 uint32_t WB_POWER_GetBatteryMillivolts();
 uint32_t WB_POWER_GetCapacitorMillivolts();

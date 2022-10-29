@@ -28,7 +28,7 @@
 #include "wb_sigfox.h"
 
 #define GPS_POWER_PORT gpioPortC
-#define GPS_POWER_BIT 15
+#define GPS_POWER_BIT 1
 
 #define BUFFER_SIZE 255
 

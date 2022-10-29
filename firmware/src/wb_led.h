@@ -17,18 +17,13 @@
 #ifndef WB_LED_H_
 #define WB_LED_H_
 
-#define LED_GREEN_PORT gpioPortC
-#define LED_GREEN_BIT 1
-
-#define LED_RED_PORT gpioPortC
-#define LED_RED_BIT 14
+#define LED_PORT gpioPortC
+#define LED_BIT 15
 
 void WB_LED_Init();
 void WB_LED_Test();
 void WB_LED_Clear();
 void WB_LED_Set();
-void WB_LED_SetRed();
-void WB_LED_SetGreen();
 void WB_LED_StartBlink(uint8_t seconds, uint16_t ticks);
 void WB_LED_StopBlink();
 

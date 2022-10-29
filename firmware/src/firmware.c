@@ -39,8 +39,8 @@
 
 
 #define MODULE_REVISION REVISION_TD1208
-#define PRODUCT_LED_PORT LED_GREEN_PORT
-#define PRODUCT_LED_BIT LED_GREEN_BIT
+#define PRODUCT_LED_PORT LED_PORT
+#define PRODUCT_LED_BIT LED_BIT
 #define PRODUCT_LED_BLINK 1
 #define PRODUCT_LED_DRIVE gpioDriveModeLowest
 
@@ -69,7 +69,7 @@ static void Shutdown() {
 	for (i=0; i<5; i++) {
 		WB_LED_Clear();
 		TD_RTC_Delay(TMS(200));
-		WB_LED_SetRed();
+		WB_LED_Set();
 		TD_RTC_Delay(TMS(200));
 	}
 	WB_LED_Clear();
@@ -80,7 +80,7 @@ static void Shutdown() {
 	// ACTUAL "SHUTDOWN" is HERE
 	// the system will wake next time we press the button
 
-	WB_LED_SetGreen(); // user feedback
+	WB_LED_Set(); // user feedback
 	TD_RTC_Delay(TMS(2000));
 
 	NVIC_SystemReset(); // so we start fresh
@@ -134,19 +134,19 @@ void TD_USER_Setup(void) {
 
 	WB_MONITORING_Init();
 	WB_POWER_Init();
+	WB_LED_Init();
 
 	while (true) {
 		uint32_t voltage = WB_POWER_GetCapacitorMillivolts();
 		WB_DEBUG("vcap: %d mV\n", voltage);
 		if (voltage > 2500) break;
-		WB_LED_SetRed();
+		WB_LED_Set();
 		TD_RTC_Delay(TMS(2));
 		WB_LED_Clear();
 		TD_WATCHDOG_Feed();
 		TD_RTC_Delay(TMS(2000));
 	}
 
-	WB_LED_Init();
 	WB_REPORTS_Init();
 	WB_BUTTON_Init();
 	WB_GPS_Init();
@@ -159,7 +159,7 @@ void TD_USER_Setup(void) {
 		uint32_t voltage = WB_POWER_GetCapacitorMillivolts();
 		WB_DEBUG("vcap: %d mV\n", voltage);
 		if (voltage > 3300) break;
-		WB_LED_SetGreen();
+		WB_LED_Set();
 		TD_RTC_Delay(TMS(2));
 		WB_LED_Clear();
 		TD_WATCHDOG_Feed();
@@ -168,7 +168,7 @@ void TD_USER_Setup(void) {
 
 	//WB_COMPASS_TestCalibration();
 
-	WB_LED_SetGreen();
+	WB_LED_Set();
 	TD_RTC_Delay(TMS(3000)); // wait for windspeed acquisition
 	float windSpeed = WB_PROPELLER_GetSpeed();
 	float windHeading = WB_COMPASS_GetHeading();
@@ -182,7 +182,7 @@ void TD_USER_Setup(void) {
 		WB_DEBUG("vbat: %d mV\n", WB_POWER_GetBatteryMillivolts());
 		ButtonLoop();
 		TD_RTC_Sleep();
-		WB_LED_SetGreen();
+		WB_LED_Set();
 	}
 	WB_LED_Clear();
 	WB_GPS_PowerOff();

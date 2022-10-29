@@ -30,41 +30,30 @@ static bool isBlinking;
 
 static void BlinkTimer (uint32_t argument, uint8_t repetition) {
 	if (isBlinking) {
-		GPIO_PinOutToggle(LED_RED_PORT, LED_RED_BIT);
+		GPIO_PinOutToggle(LED_PORT, LED_BIT);
 	}
 }
 
 void WB_LED_Init() {
-	GPIO_DriveModeSet(LED_GREEN_PORT, gpioDriveModeHigh);
-	GPIO_DriveModeSet(LED_RED_PORT, gpioDriveModeHigh);
+	// GPIO_DriveModeSet(LED_PORT, gpioDriveModeHigh); no longer needed with the MOS
 
-	GPIO_PinModeSet(LED_GREEN_PORT, LED_GREEN_BIT, gpioModePushPull, 0);
-	GPIO_PinModeSet(LED_RED_PORT, LED_RED_BIT, gpioModePushPullDrive, 0);
+	GPIO_PinModeSet(LED_PORT, LED_BIT, gpioModePushPullDrive, 0);
 
 	timer = 0xFF;
 }
 
 void WB_LED_Clear() {
-	GPIO_PinOutClear(LED_RED_PORT, LED_RED_BIT);
-	GPIO_PinOutClear(LED_GREEN_PORT, LED_GREEN_BIT);
-}
-
-void WB_LED_SetGreen() {
-	GPIO_PinOutSet(LED_GREEN_PORT, LED_GREEN_BIT);
-}
-
-void WB_LED_SetRed() {
-	GPIO_PinOutSet(LED_RED_PORT, LED_RED_BIT);
+	GPIO_PinOutClear(LED_PORT, LED_BIT);
 }
 
 void WB_LED_Set() {
-	GPIO_PinOutSet(LED_RED_PORT, LED_RED_BIT);
+	GPIO_PinOutSet(LED_PORT, LED_BIT);
 }
 
 void WB_LED_Test() {
 	int i;
 	for (i=0; i<6; i++) {
-		GPIO_PinOutToggle(LED_RED_PORT, LED_RED_BIT);
+		GPIO_PinOutToggle(LED_PORT, LED_BIT);
 		TD_RTC_Delay(T500MS);
 	}
 }
