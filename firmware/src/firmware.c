@@ -29,7 +29,6 @@
 #include "wb_button.h"
 #include "wb_gps.h"
 #include "wb_i2c.h"
-#include "wb_pressure.h"
 #include "wb_compass.h"
 #include "wb_sigfox.h"
 #include "wb_propeller.h"
@@ -152,7 +151,6 @@ void TD_USER_Setup(void) {
 	WB_BUTTON_Init();
 	WB_GPS_Init();
 	WB_I2C_Init();
-	WB_PRESSURE_Shutdown();
 	WB_COMPASS_Init();
 	WB_SIGFOX_Init();
 	WB_PROPELLER_Init();
