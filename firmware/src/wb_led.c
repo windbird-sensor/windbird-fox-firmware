@@ -76,3 +76,39 @@ void WB_LED_StopBlink() {
 	isBlinking = false;
 	WB_LED_Clear();
 }
+
+float cubicEasing (float step, float start, float stop, float duration) {
+	return stop*(step/=duration)*step*step + start;
+}
+
+void WB_LED_Fade(WB_LED_FadeDirection_t direction, uint32_t duration) {
+	const int pwmFreq = 1000;
+	int i;
+	int j;
+	int on;
+	int off;
+	int val;
+	for (i=0; i<duration; i++) {
+		//val = easeInQuart(i, 0, pwmFreq, duration);
+		val = cubicEasing(i, 0, pwmFreq, duration);
+		//val = easeInOutElastic(i, pwmFreq * 0.3, pwmFreq * 0.7, duration, pwmFreq * 1., duration * .1);
+		if (direction == WB_LED_FADE_IN) {
+			//val = easeInOutElastic(i, pwmFreq * 0.2, pwmFreq * 0.8, duration);
+			on = val;
+			off = pwmFreq - val;
+		} else {
+			//val = easeOutExpo(i, 0, pwmFreq, duration);
+			//val = easeInBack(i, pwmFreq * 0.2, pwmFreq, duration, 1.5);
+			//val = easeOutBack(i, 0, pwmFreq * 0.8, duration, 1.5);
+			//val = easeInElastic(i, pwmFreq * 0.2, pwmFreq, duration);
+			on = pwmFreq - val;
+			off = val;
+			//on = val;
+			//off = pwmFreq - val;
+		}
+		WB_LED_Set();
+		for (j=0; j<on; j++) {};
+		WB_LED_Clear();
+		for (j=0; j<off; j++) {};
+	}
+}

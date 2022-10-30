@@ -20,11 +20,17 @@
 #define LED_PORT gpioPortC
 #define LED_BIT 15
 
+typedef enum {
+	WB_LED_FADE_IN,
+	WB_LED_FADE_OUT,
+	} WB_LED_FadeDirection_t;
+
 void WB_LED_Init();
 void WB_LED_Test();
 void WB_LED_Clear();
 void WB_LED_Set();
 void WB_LED_StartBlink(uint8_t seconds, uint16_t ticks);
 void WB_LED_StopBlink();
+void WB_LED_Fade(WB_LED_FadeDirection_t direction, uint32_t duration);
 
 #endif /* WB_LED_H_ */

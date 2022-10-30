@@ -72,7 +72,7 @@ static void Shutdown() {
 		WB_LED_Set();
 		TD_RTC_Delay(TMS(200));
 	}
-	WB_LED_Clear();
+	WB_LED_Fade(WB_LED_FADE_OUT, 1500);
 
 	WB_SIGFOX_ShutdownMessage();
 
@@ -80,7 +80,8 @@ static void Shutdown() {
 	// ACTUAL "SHUTDOWN" is HERE
 	// the system will wake next time we press the button
 
-	WB_LED_Set(); // user feedback
+	WB_LED_Fade(WB_LED_FADE_IN, 1500); // user feedback
+	WB_LED_Set();
 	TD_RTC_Delay(TMS(2000));
 
 	NVIC_SystemReset(); // so we start fresh
