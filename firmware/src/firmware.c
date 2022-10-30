@@ -57,13 +57,15 @@
 
 #include <td_config.h>
 
-static void Shutdown() {
+static void Shutdown(bool earlyShutdown) {
 
 	// shutdown is engaged
 	WB_DEBUG("turn off\n");
 
-	WB_REPORTS_Stop();
-	WB_GPS_PowerOff();
+	if (!earlyShutdown) {
+	  WB_REPORTS_Stop();
+	  WB_GPS_PowerOff();
+	}
 
 	int i;
 	for (i=0; i<5; i++) {
@@ -74,7 +76,7 @@ static void Shutdown() {
 	}
 	WB_LED_Fade(WB_LED_FADE_OUT, 1500);
 
-	WB_SIGFOX_ShutdownMessage();
+	if (!earlyShutdown) WB_SIGFOX_ShutdownMessage();
 
 	EMU_EnterEM3(true);
 	// ACTUAL "SHUTDOWN" is HERE
@@ -116,7 +118,7 @@ static void ButtonLoop() {
 			break;
 		case WB_BUTTON_PRESSED_POWER_SWITCH:
 			WB_DEBUG("button power switch\n");
-			Shutdown();
+			Shutdown(false);
 			break;
 		case WB_BUTTON_PRESSED_CALIBRATION:
 			WB_DEBUG("button calibration\n");
