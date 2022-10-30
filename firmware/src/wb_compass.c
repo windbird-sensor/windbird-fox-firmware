@@ -24,7 +24,74 @@
 #include "wb_compass.h"
 #include "wb_sigfox.h"
 
-#define HMC5883L_ADDRESS 0x1E
+// I2C chip address
+#define MC6470_ADDRESS 0x4C
+
+// Define all register name and addresses
+#define MC6470_SELF_TEST_REG			0x0C
+#define MC6470_MORE_INFO_VERSION_REG 	0x0D
+#define MC6470_MORE_INFO_REG			0x0E
+#define MC6470_WHO_I_AM_REG				0x0F
+#define MC6470_OUTPUT_X_LSB_REG			0x10
+#define MC6470_OUTPUT_X_MSB_REG			0x11
+#define MC6470_OUTPUT_Y_LSB_REG			0x12
+#define MC6470_OUTPUT_Y_MSB_REG			0x13
+#define MC6470_OUTPUT_Z_LSB_REG			0x14
+#define MC6470_OUTPUT_Z_MSB_REG			0x15
+#define MC6470_STATUS_REG				0x18
+#define MC6470_CONTROL_1_REG			0x1B
+#define MC6470_CONTROL_2_REG			0x1C
+#define MC6470_CONTROL_3_REG			0x1D
+#define MC6470_CONTROL_4_REG			0x1E
+#define MC6470_OFFSET_X_LSB_REG			0x20
+#define MC6470_OFFSET_X_MSB_REG			0x21
+#define MC6470_OFFSET_Y_LSB_REG			0x22
+#define MC6470_OFFSET_Y_MSB_REG			0x23
+#define MC6470_OFFSET_Z_LSB_REG			0x24
+#define MC6470_OFFSET_Z_MSB_REG			0x25
+#define MC6470_ITHR_L_REG				0x26
+#define MC6470_ITHR_H_REG				0x27
+#define MC6470_TEMPERATURE_REG			0x31
+
+// Define Register bit mask
+#define MC6470_STATUS_DRDY_MASK			0x40
+#define MC6470_STATUS_DOR_MASK			0x20
+#define MC6470_STATUS_FFU_MASK			0x40
+#define MC6470_STATUS_TRDY_MASK			0x02
+#define MC6470_STATUS_ORDY_MASK			0x01
+
+#define MC6470_CONTROL_1_PC_MASK		0x80
+#define MC6470_CONTROL_1_ODR_MASK		0x18
+#define MC6470_CONTROL_1_FS_MASK		0x02
+
+#define MC6470_CONTROL_2_AVG_MASK		0x80
+#define MC6470_CONTROL_2_FCO_MASK		0x40
+#define MC6470_CONTROL_2_AOR_MASK		0x20
+#define MC6470_CONTROL_2_FF_MASK		0x10
+#define MC6470_CONTROL_2_DEN_MASK		0x08
+#define MC6470_CONTROL_2_DRP_MASK		0x04
+#define MC6470_CONTROL_2_DTS_MASK		0x02
+#define MC6470_CONTROL_2_DOS_MASK		0x01
+
+#define MC6470_CONTROL_3_SRST_MASK		0x80
+#define MC6470_CONTROL_3_FORCE_MASK		0x40
+#define MC6470_CONTROL_3_STC_MASK		0x10
+#define MC6470_CONTROL_3_TCS_MASK		0x02
+#define MC6470_CONTROL_3_OCL_MASK		0x01
+
+#define MC6470_CONTROL_4_MMD_MASK		0xC0
+#define MC6470_CONTROL_4_RS_MASK		0x10
+#define MC6470_CONTROL_4_AS_MASK		0x08
+
+
+#define MC6470_SELF_TEST_RESET	 		0x55
+#define MC6470_SELF_TEST_ON_GOING		0xAA
+#define MC6470_SELF_TEST_PASS			0x55
+
+#define MC6470_MORE_INFO_VERSION_VALUE 	0x11
+#define MC6470_MORE_INFO_VALUE			0x15
+#define MC6470_WHO_I_AM_VALUE			0x49
+
 
 #define HMC5883L_CRA 0x00
 #define HMC5883L_CRA_AVERAGE_1_SAMPLE 0b00000000
@@ -46,112 +113,162 @@
 #define HMC5883L_SELFTEST_LOW_LIMIT 243
 #define HMC5883L_SELFTEST_HIGH_LIMIT 575
 
-static uint8_t i2cBuffer[6];
+//static uint8_t i2cBuffer[6];
 static float yOffset, zOffset, yScale, zScale;
 
 static bool Config(uint8_t mode, uint8_t gain) {
+	uint8_t control1Reg;
+	// Configure force state CNTL1:FS = 1
+	if (WB_I2C_ReadBytes(MC6470_ADDRESS, MC6470_CONTROL_1_REG, 1, &control1Reg, WB_I2C_DEFAULT_TIMEOUT) != 1)
+	{
+		return false; // can't read MC6470_CONTROL_1_REG
+	}
 
-	i2cBuffer[0] = gain << 5;
-	if(!WB_I2C_WriteByte(HMC5883L_ADDRESS, HMC5883L_CRB, i2cBuffer[0], WB_I2C_DEFAULT_TIMEOUT)) return false;
-	int16_t dummy;
-	if(!WB_COMPASS_GetRaw(&dummy, &dummy, &dummy)) return false; //set the new gain
+	// set FS bit
+	control1Reg |= MC6470_CONTROL_1_FS_MASK;
 
-	i2cBuffer[0] = HMC5883L_CRA_AVERAGE_1_SAMPLE | mode | HMC5883L_CRA_RATE_0P75HZ;
-	if(!WB_I2C_WriteByte(HMC5883L_ADDRESS, HMC5883L_CRA, i2cBuffer[0], WB_I2C_DEFAULT_TIMEOUT)) return false;
-
+	if (WB_I2C_WriteByte(MC6470_ADDRESS, MC6470_CONTROL_1_REG, control1Reg, WB_I2C_DEFAULT_TIMEOUT) == false)
+	{
+		return false; // can't write MC6470_CONTROL_1_REG
+	}
 
 	return true;
 }
 
-static bool ConnectionTest() {
-	if (WB_I2C_ReadBytes(HMC5883L_ADDRESS, HMC5883L_ID_REG_A, 3, i2cBuffer, WB_I2C_DEFAULT_TIMEOUT) == 3) {
-		return (i2cBuffer[0] == 'H' && i2cBuffer[1] == '4' && i2cBuffer[2] == '3');
-	} else {
+static bool ConnectionTest(void)
+{
+	uint8_t buffer[3];
+	bool connectionStatus;
+
+	// Read 3 consecutives registers [ More Info Version; More Info; Who I Am]
+	if (WB_I2C_ReadBytes(MC6470_ADDRESS, MC6470_WHO_I_AM_REG, 3, buffer, WB_I2C_DEFAULT_TIMEOUT) == 3)
+	{
+		if( buffer[0]== MC6470_MORE_INFO_VERSION_VALUE && buffer[1]== MC6470_MORE_INFO_VALUE && buffer[2]== MC6470_WHO_I_AM_VALUE )
+		{
+			return true;
+		}
+	}
+	else
+	{
 		WB_DEBUG("!!! I2C ERROR !!! WB_COMPASS_ConnectionTest\n");
 		return false;
 	}
 }
 
 static bool SelfTest() {
-
-	int16_t x, y, z;
-
-	bool result = true;
-
-	// POSITIVE BIAS
-
-	if (!Config(HMC5883L_CRA_MODE_POSITIVE_BIAS, HMC5883L_CRB_GAIN_DEFAULT)) {
-		WB_DEBUG("FAIL - Config error\n");
-		result = false;
+	// Init the STD register to its default VALUE
+	bool writeStbStatus = WB_I2C_WriteByte(MC6470_ADDRESS, MC6470_SELF_TEST_REG, MC6470_SELF_TEST_RESET, WB_I2C_DEFAULT_TIMEOUT);
+	if( writeStbStatus == false)
+	{
+		return false;
 	}
 
-	TD_RTC_Delay(TMS(250));
+	// Trigger the Self Test
 
-
-	if (!WB_COMPASS_GetRaw(&x, &y, &z)) {
-		WB_DEBUG("FAIL - acquire error\n");
+	// Read CTRL3 and set Bit STC to 1
+	uint8_t ctrl3;
+	bool ctrlStatus = WB_I2C_ReadByte(MC6470_ADDRESS, MC6470_CONTROL_3_REG, &ctrl3, WB_I2C_DEFAULT_TIMEOUT);
+	if( ctrl3 == false )
+	{
+		return false;
 	}
 
-	if (x < HMC5883L_SELFTEST_LOW_LIMIT || x > HMC5883L_SELFTEST_HIGH_LIMIT) {
-		WB_DEBUG("FAIL - X axis is out of bounds (%d)\n", x);
-		result = false;
-	}
-	if (y < HMC5883L_SELFTEST_LOW_LIMIT || y > HMC5883L_SELFTEST_HIGH_LIMIT) {
-		WB_DEBUG("FAIL - Y axis is out of bounds (%d)\n", y);
-		result = false;
-	}
-	if (z < HMC5883L_SELFTEST_LOW_LIMIT || z > HMC5883L_SELFTEST_HIGH_LIMIT) {
-		WB_DEBUG("FAIL - Z axis is out of bounds (%d)\n", z);
-		result = false;
+	ctrl3 |= MC6470_CONTROL_3_STC_MASK; // CTRL3.STC = 1
+
+	// Write it back
+	ctrlStatus = WB_I2C_WriteByte(MC6470_ADDRESS, MC6470_CONTROL_3_REG, crtl3, WB_I2C_DEFAULT_TIMEOUT);
+	if( writeStbStatus == false)
+	{
+		return false;
 	}
 
+	// Read once to get the on going self test value
+	uint8_t onGoingSelfTestValue;
 
-	// NEGATIVE BIAS
-
-	if (!Config(HMC5883L_CRA_MODE_NEGATIVE_BIAS, HMC5883L_CRB_GAIN_DEFAULT)) {
-		WB_DEBUG("FAIL - Config error\n");
-		result = false;
+	bool onGoingStbStatus = WB_I2C_ReadByte(MC6470_ADDRESS, MC6470_SELF_TEST_REG, &onGoingSelfTestValue, WB_I2C_DEFAULT_TIMEOUT);
+	if( writeStbStatus == false || onGoingSelfTestValue != MC6470_SELF_TEST_ON_GOING)
+	{
+		return false;
 	}
 
-	TD_RTC_Delay(TMS(250));
-
-
-	if (!WB_COMPASS_GetRaw(&x, &y, &z)) {
-		WB_DEBUG("FAIL - acquire error\n");
+	// Read again to get the PASS value
+	uint8_t finalSelfTestValue;
+	bool resultStbStatus = WB_I2C_ReadByte(MC6470_ADDRESS, MC6470_SELF_TEST_REG, &finalSelfTestValue, WB_I2C_DEFAULT_TIMEOUT);
+	if( writeStbStatus == false || finalSelfTestValue != MC6470_SELF_TEST_PASS)
+	{
+		return false;
 	}
 
-	if (x > -HMC5883L_SELFTEST_LOW_LIMIT || x < -HMC5883L_SELFTEST_HIGH_LIMIT) {
-		WB_DEBUG("FAIL - X neg axis is out of bounds (%d)\n", x);
-		result = false;
-	}
-	if (y > -HMC5883L_SELFTEST_LOW_LIMIT || y < -HMC5883L_SELFTEST_HIGH_LIMIT) {
-		WB_DEBUG("FAIL - Y neg axis is out of bounds (%d)\n", y);
-		result = false;
-	}
-	if (z > -HMC5883L_SELFTEST_LOW_LIMIT || z < -HMC5883L_SELFTEST_HIGH_LIMIT) {
-		WB_DEBUG("FAIL - Z neg axis is out of bounds (%d)\n", z);
-		result = false;
-	}
-
-	// RESTORE CONFIG
-
-	if (!Config(HMC5883L_CRA_MODE_NORMAL, HMC5883L_CRB_GAIN_DEFAULT)) {
-		WB_DEBUG("FAIL - Config error\n");
-		result = false;
-	}
-
-	return result;
+	return true;
 }
 
 
 bool WB_COMPASS_GetRaw(int16_t *x, int16_t *y, int16_t *z) {
-	if(!WB_I2C_WriteByte(HMC5883L_ADDRESS, HMC5883L_MR, HMC5883L_MR_ONESHOT, WB_I2C_DEFAULT_TIMEOUT)) return false;
-	TD_RTC_Delay(TMS(6));
-	if (WB_I2C_ReadBytes(HMC5883L_ADDRESS, HMC5883L_DATA_OUT_REG, 6, i2cBuffer, WB_I2C_DEFAULT_TIMEOUT) != 6) return false;
 
-	*x = (i2cBuffer[0] << 8) + i2cBuffer[1];
-	*y = (i2cBuffer[2] << 8) + i2cBuffer[3];
-	*z = (i2cBuffer[4] << 8) + i2cBuffer[5];
+
+
+	//CTRL1.PC = 1 Power control ON
+	uint8_t ctrl1Reg;
+
+	if (WB_I2C_ReadBytes(MC6470_ADDRESS, MC6470_CONTROL_1_REG, 1, &ctrl1Reg, WB_I2C_DEFAULT_TIMEOUT) != 1)
+	{
+		return false; // can't read MC6470_CONTROL_1_REG
+	}
+
+	ctrl1Reg |= MC6470_CONTROL_1_PC_MASK;
+
+	if (WB_I2C_WriteByte(MC6470_ADDRESS, MC6470_CONTROL_1_REG, ctrl1Reg, WB_I2C_DEFAULT_TIMEOUT) == false)
+	{
+		return false; // can't write MC6470_CONTROL_1_REG
+	}
+
+
+	// CTRL3.Force =1
+	uint8_t ctrl3Reg;
+
+	if (WB_I2C_ReadBytes(MC6470_ADDRESS, MC6470_CONTROL_3_REG, 1, &ctrl3Reg, WB_I2C_DEFAULT_TIMEOUT) != 1)
+	{
+		return false; // can't read MC6470_CONTROL_3_REG
+	}
+
+	ctrl3Reg |= MC6470_CONTROL_3_FORCE_MASK;
+
+	if (WB_I2C_WriteByte(MC6470_ADDRESS, MC6470_CONTROL_3_REG, control1Reg, WB_I2C_DEFAULT_TIMEOUT) == false)
+	{
+		return false; // can't write MC6470_CONTROL_3_REG
+	}
+
+	// Wait 5Ms
+	TD_RTC_Delay(TMS(5));
+
+	// Force bit returns to 0 when measure is done
+	do
+	{
+		if (WB_I2C_ReadBytes(MC6470_ADDRESS, MC6470_CONTROL_3_REG, 1, &ctrl3Reg, WB_I2C_DEFAULT_TIMEOUT) != 1)
+		{
+			return false; // can't read MC6470_CONTROL_3_REG
+		}
+	}while((ctrl3Reg & MC6470_CONTROL_3_FORCE_MASK) != 0)
+
+	//Read results
+	int16_t resultsBuffer[3];
+
+	if (WB_I2C_ReadBytes(MC6470_ADDRESS, MC6470_OUTPUT_X_LSB_REG, 6, resultsBuffer, WB_I2C_DEFAULT_TIMEOUT) != 6)
+	{
+		return false; // Can't read results
+	}
+
+	// return in stand by mode
+	ctrl1Reg &= ~MC6470_CONTROL_1_PC_MASK;
+
+	if (WB_I2C_WriteByte(MC6470_ADDRESS, MC6470_CONTROL_1_REG, control1Reg, WB_I2C_DEFAULT_TIMEOUT) == false)
+	{
+		return false; // can't write MC6470_CONTROL_1_REG
+	}
+
+	*x = resultsBuffer[0]; // Results are always little endian
+	*y = resultsBuffer[1]; // Results are always little endian
+	*z = resultsBuffer[2]; // Results are always little endian
 
 	return true;
 }
@@ -159,6 +276,7 @@ bool WB_COMPASS_GetRaw(int16_t *x, int16_t *y, int16_t *z) {
 
 bool WB_COMPASS_Test () {
 
+	// One shot measure is triggered using the force state.
 	bool result = true;
 
 	if (!ConnectionTest()) {
