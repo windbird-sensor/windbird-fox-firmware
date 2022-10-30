@@ -20,6 +20,7 @@
 
 #include <td_core.h>
 
+#include "wb_power.h"
 #include "wb_debug.h"
 
 #define VCAP_ADC_CHANNEL adcSingleInpCh6 // D6
@@ -121,4 +122,16 @@ uint32_t WB_POWER_GetCapacitorMillivolts() {
 void WB_POWER_Init() {
 	WB_DEBUG("vcap: %d mV\n", WB_POWER_GetCapacitorMillivolts());
 	WB_DEBUG("vbat: %d mV\n", WB_POWER_GetBatteryMillivolts());
+
+	GPIO_DriveModeSet(VAUX_PORT, gpioDriveModeHigh);
+	GPIO_PinModeSet(VAUX_PORT, VAUX_BIT, gpioModePushPullDrive, 0);
+	WB_POWER_EnableVAUX();
+}
+
+void WB_POWER_EnableVAUX() {
+	GPIO_PinOutSet(VAUX_PORT, VAUX_BIT);
+}
+
+void WB_POWER_DisableVAUX() {
+	GPIO_PinOutClear(VAUX_PORT, VAUX_BIT);
 }

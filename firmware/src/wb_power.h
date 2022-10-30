@@ -22,5 +22,7 @@
 void WB_POWER_Init();
 uint32_t WB_POWER_GetBatteryMillivolts();
 uint32_t WB_POWER_GetCapacitorMillivolts();
+void WB_POWER_EnableVAUX();
+void WB_POWER_DisableVAUX();
 
 #endif /* WB_POWER_H_ */

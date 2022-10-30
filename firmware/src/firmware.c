@@ -42,7 +42,10 @@
 #define PRODUCT_LED_PORT LED_PORT
 #define PRODUCT_LED_BIT LED_BIT
 #define PRODUCT_LED_BLINK 1
-#define PRODUCT_LED_DRIVE gpioDriveModeLowest
+// PRODUCT_LED_DRIVE will be overwritten by VAUX's gpioDriveModeHigh
+
+// enable VAUX in bootloader, to allow external UART communication
+#define PRODUCT_INIT_DATA {PIP(VAUX_PORT, VAUX_BIT, PI_OUTPUT, 1),PIS(VAUX_PORT, gpioDriveModeHigh)}
 
 #define TD_SENSOR_USE_CODE 0
 #define TD_GEOLOC_USE_CODE 0
