@@ -44,16 +44,7 @@
 #define PRODUCT_LED_BLINK 1
 #define PRODUCT_LED_DRIVE gpioDriveModeLowest
 
-// Disabling the bootloader because I believe there is
-// a security issue in the current over-the-air
-// firware upgrading function.
-// See https://github.com/Telecom-Design/TD_RF_Module_SDK/issues/40
-#define PRODUCT_BOOTLOADER_SKIP 1
-#define PRODUCT_UART_BOOTLOADER_SKIP 1
 
-// Needed to prevent a bug related to PRODUCT_BOOTLOADER_SKIP
-// See https://github.com/Telecom-Design/TD_RF_Module_SDK/issues/41
-#define TD_SIGFOX_TRANSMIT_LOCAL_ONLY 1
 
 #include <td_config.h>
 
