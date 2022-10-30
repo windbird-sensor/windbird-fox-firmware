@@ -139,36 +139,40 @@ void TD_USER_Setup(void) {
 
 	WB_POWER_Init();
 	WB_LED_Init();
+	WB_BUTTON_Init();
 
 	while (true) {
 		uint32_t voltage = WB_POWER_GetCapacitorMillivolts();
 		WB_DEBUG("vcap: %d mV\n", voltage);
-		if (voltage > 2500) break;
-		WB_LED_Set();
-		TD_RTC_Delay(TMS(2));
-		WB_LED_Clear();
+		if (voltage < 2500) {
+			WB_LED_Set();
+			TD_RTC_Delay(TMS(10));
+			WB_LED_Clear();
+			TD_RTC_Delay(TMS(1990));
+		} else if (voltage < 3300) {
+			WB_LED_Set();
+			TD_RTC_Delay(TMS(10));
+			WB_LED_Clear();
+			TD_RTC_Delay(TMS(100));
+			WB_LED_Set();
+			TD_RTC_Delay(TMS(10));
+			WB_LED_Clear();
+			TD_RTC_Delay(TMS(1880));
+		} else {
+			break;
+		}
+		if (WB_BUTTON_Loop() == WB_BUTTON_PRESSED_POWER_SWITCH) {
+			Shutdown(true);
+		}
 		TD_WATCHDOG_Feed();
-		TD_RTC_Delay(TMS(2000));
 	}
 
 	WB_REPORTS_Init();
-	WB_BUTTON_Init();
 	WB_GPS_Init();
 	WB_I2C_Init();
 	WB_COMPASS_Init();
 	WB_SIGFOX_Init();
 	WB_PROPELLER_Init();
-
-	while (true) {
-		uint32_t voltage = WB_POWER_GetCapacitorMillivolts();
-		WB_DEBUG("vcap: %d mV\n", voltage);
-		if (voltage > 3300) break;
-		WB_LED_Set();
-		TD_RTC_Delay(TMS(2));
-		WB_LED_Clear();
-		TD_WATCHDOG_Feed();
-		TD_RTC_Delay(TMS(2000));
-	}
 
 	//WB_COMPASS_TestCalibration();
 
