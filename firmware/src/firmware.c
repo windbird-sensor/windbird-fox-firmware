@@ -129,13 +129,14 @@ static void ButtonLoop() {
 
 void TD_USER_Setup(void) {
 
+	WB_MONITORING_Init(); // start watchdog
+
 	// init serial port for GPS and DEBUG.
 	init_printf(TD_UART_Init(9600, true, false), TD_UART_Putc, TD_UART_Start, TD_UART_Stop);
 
 	WB_DEBUG("*** HELLO ***\n");
 	WB_DEBUG("Device ID : %x\n", TD_SIGFOX_GetId());
 
-	WB_MONITORING_Init();
 	WB_POWER_Init();
 	WB_LED_Init();
 
