@@ -44,7 +44,8 @@
 #define PRODUCT_LED_BLINK 1
 #define PRODUCT_LED_DRIVE gpioDriveModeLowest
 
-
+#define TD_SENSOR_USE_CODE 0
+#define TD_GEOLOC_USE_CODE 0
 
 #include <td_config.h>
 
