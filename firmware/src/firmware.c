@@ -73,6 +73,8 @@ static void Shutdown(bool earlyShutdown) {
 
 	if (!earlyShutdown) WB_SIGFOX_ShutdownMessage();
 
+	WB_POWER_DisableVAUX();
+
 	EMU_EnterEM3(true);
 	// ACTUAL "SHUTDOWN" is HERE
 	// the system will wake next time we press the button
