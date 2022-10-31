@@ -2,6 +2,7 @@
  * @file WB_compass.c
  * @brief Compass Sensor API for WINDBIRD's firmware
   * @author Nicolas BALDECK
+  * @author ludobaill
  ******************************************************************************
  * @section License
  * (C) Copyright 2015 Bac Plus Zéro S.A.S.
