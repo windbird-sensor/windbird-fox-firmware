@@ -1,8 +1,8 @@
 /**************************************************************************
  * @file WB_compass.c
  * @brief Compass Sensor API for WINDBIRD's firmware
-  * @author Nicolas BALDECK
-  * @author ludobaill
+ * @author Nicolas BALDECK
+ * @author ludobaill
  ******************************************************************************
  * @section License
  * (C) Copyright 2015 Bac Plus Zéro S.A.S.
@@ -30,16 +30,16 @@
 
 // Define all register name and addresses
 #define MC6470_SELF_TEST_REG			0x0C
-#define MC6470_MORE_INFO_VERSION_REG 	0x0D
+#define MC6470_MORE_INFO_VERSION_REG		0x0D
 #define MC6470_MORE_INFO_REG			0x0E
-#define MC6470_WHO_I_AM_REG				0x0F
+#define MC6470_WHO_I_AM_REG			0x0F
 #define MC6470_OUTPUT_X_LSB_REG			0x10
 #define MC6470_OUTPUT_X_MSB_REG			0x11
 #define MC6470_OUTPUT_Y_LSB_REG			0x12
 #define MC6470_OUTPUT_Y_MSB_REG			0x13
 #define MC6470_OUTPUT_Z_LSB_REG			0x14
 #define MC6470_OUTPUT_Z_MSB_REG			0x15
-#define MC6470_STATUS_REG				0x18
+#define MC6470_STATUS_REG			0x18
 #define MC6470_CONTROL_1_REG			0x1B
 #define MC6470_CONTROL_2_REG			0x1C
 #define MC6470_CONTROL_3_REG			0x1D
@@ -50,8 +50,8 @@
 #define MC6470_OFFSET_Y_MSB_REG			0x23
 #define MC6470_OFFSET_Z_LSB_REG			0x24
 #define MC6470_OFFSET_Z_MSB_REG			0x25
-#define MC6470_ITHR_L_REG				0x26
-#define MC6470_ITHR_H_REG				0x27
+#define MC6470_ITHR_L_REG			0x26
+#define MC6470_ITHR_H_REG			0x27
 #define MC6470_TEMPERATURE_REG			0x31
 
 // Define Register bit mask
@@ -89,7 +89,7 @@
 #define MC6470_SELF_TEST_ON_GOING		0xAA
 #define MC6470_SELF_TEST_PASS			0x55
 
-#define MC6470_MORE_INFO_VERSION_VALUE 	0x11
+#define MC6470_MORE_INFO_VERSION_VALUE		0x11
 #define MC6470_MORE_INFO_VALUE			0x15
 #define MC6470_WHO_I_AM_VALUE			0x49
 
@@ -382,7 +382,7 @@ void WB_COMPASS_Init() {
 	// TD_FLASH_DeleteVariables();
 
 	if (!TD_FLASH_DeclareVariable((uint8_t *) &xOffset, sizeof (float), 0)) {
-		WB_DEBUG("No xOffset in Flash âˆ’ Using default\n");
+		WB_DEBUG("No xOffset in Flash. Using default\n");
 		xOffset = 0;
 		needSave = true;
 	} else {
@@ -390,7 +390,7 @@ void WB_COMPASS_Init() {
 	}
 
 	if (!TD_FLASH_DeclareVariable((uint8_t *) &yOffset, sizeof (float), 0)) {
-		WB_DEBUG("No yOffset in Flash âˆ’ Using default\n");
+		WB_DEBUG("No yOffset in Flash. Using default\n");
 		yOffset = 0;
 		needSave = true;
 	} else {
@@ -398,7 +398,7 @@ void WB_COMPASS_Init() {
 	}
 
 	if (!TD_FLASH_DeclareVariable((uint8_t *) &zOffset, sizeof (float), 0)) {
-		WB_DEBUG("No zOffset in Flash âˆ’ Using default\n");
+		WB_DEBUG("No zOffset in Flash. Using default\n");
 		zOffset = 0;
 		needSave = true;
 	} else {
@@ -406,7 +406,7 @@ void WB_COMPASS_Init() {
 	}
 
 	if (!TD_FLASH_DeclareVariable((uint8_t *) &xScale, sizeof (float), 0)) {
-		WB_DEBUG("No xScale in Flash âˆ’ Using default\n");
+		WB_DEBUG("No xScale in Flash. Using default\n");
 		xScale = 1;
 		needSave = true;
 	} else {
@@ -414,7 +414,7 @@ void WB_COMPASS_Init() {
 	}
 
 	if (!TD_FLASH_DeclareVariable((uint8_t *) &yScale, sizeof (float), 0)) {
-		WB_DEBUG("No yScale in Flash âˆ’ Using default\n");
+		WB_DEBUG("No yScale in Flash. Using default\n");
 		yScale = 1;
 		needSave = true;
 	} else {
@@ -422,7 +422,7 @@ void WB_COMPASS_Init() {
 	}
 
 	if (!TD_FLASH_DeclareVariable((uint8_t *) &zScale, sizeof (float), 0)) {
-		WB_DEBUG("No zScale in Flash âˆ’ Using default\n");
+		WB_DEBUG("No zScale in Flash. Using default\n");
 		zScale = 1;
 		needSave = true;
 	} else {
