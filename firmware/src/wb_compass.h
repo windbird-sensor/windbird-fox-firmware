@@ -24,7 +24,7 @@
 void WB_COMPASS_Init();
 bool WB_COMPASS_Test();
 void WB_COMPASS_TestCalibration();
-bool WB_COMPASS_GetRaw(int16_t *x, int16_t *y, int16_t *z);
+bool WB_COMPASS_GetRaw(int *x, int *y, int *z);
 float WB_COMPASS_GetHeading();
 void WB_COMPASS_Calibrate();
 void WB_COMPASS_SaveCalibration();
