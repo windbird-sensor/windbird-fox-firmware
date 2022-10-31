@@ -452,7 +452,7 @@ float WB_COMPASS_GetHeading() {
 		return 0;
 	}
 
-	float x = (rawX - xOffset) / yScale;
+	float x = (rawX - xOffset) / xScale;
 	// float y = (rawY - yOffset) / yScale;
 	float z = (rawZ - zOffset) / zScale;
 
