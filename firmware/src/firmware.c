@@ -69,9 +69,12 @@ static void Shutdown(bool earlyShutdown) {
 		WB_LED_Set();
 		TD_RTC_Delay(TMS(200));
 	}
+
+	uint32_t batteryVoltageWithLedOn = WB_POWER_GetBatteryMillivolts();
+	WB_DEBUG("batteryVoltageWithLedOn: %d\n", batteryVoltageWithLedOn);
 	WB_LED_Fade(WB_LED_FADE_OUT, 1500);
 
-	if (!earlyShutdown) WB_SIGFOX_ShutdownMessage();
+	if (!earlyShutdown) WB_SIGFOX_ShutdownMessage(batteryVoltageWithLedOn);
 
 	WB_POWER_DisableVAUX();
 
@@ -178,7 +181,9 @@ void TD_USER_Setup(void) {
 	TD_RTC_Delay(TMS(3000)); // wait for windspeed acquisition
 	float windSpeed = WB_PROPELLER_GetSpeed();
 	float windHeading = WB_COMPASS_GetHeading();
-	WB_SIGFOX_StartupMessage(windSpeed, windHeading);
+	uint32_t batteryVoltageWithLedOn = WB_POWER_GetBatteryMillivolts();
+	WB_DEBUG("batteryVoltageWithLedOn: %d\n", batteryVoltageWithLedOn);
+	WB_SIGFOX_StartupMessage(windSpeed, windHeading, batteryVoltageWithLedOn);
 
 	// WB_GPS_PowerOn(30);
 	WB_GPS_PowerOn(300);

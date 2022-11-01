@@ -92,7 +92,7 @@ static uint8_t EncodeTemperature(float temperature) {
   return (uint8_t)(float)(temperature + 50.5);
 }
 
-static uint8_t EncodeVoltage(float milliVolts) {
+static uint8_t EncodeVoltage(uint32_t milliVolts) {
   return (uint8_t)(float)((milliVolts / 10. + 0.5) - 200.);
 }
 
@@ -106,11 +106,11 @@ void WB_SIGFOX_Init () {
 
 }
 
-void WB_SIGFOX_StartupMessage (float windSpeed, float windHeading) {
+void WB_SIGFOX_StartupMessage (float windSpeed, float windHeading, uint32_t voltage) {
 
   message[0]= SIGFOX_STARTUP_MESSAGE | EncodeWindHeading(windHeading);
   message[1]=EncodeWindSpeed(windSpeed);
-  message[2]=TD_MEASURE_VoltageTemperature(false); //voltage
+  message[2]=EncodeVoltage(voltage);
 
   // embed compilation date in startup message
   //MMM DD YYYY
@@ -126,9 +126,9 @@ void WB_SIGFOX_StartupMessage (float windSpeed, float windHeading) {
   SIGFOX_SEND(message, 10);
 }
 
-void WB_SIGFOX_ShutdownMessage () {
+void WB_SIGFOX_ShutdownMessage (uint32_t voltage) {
   message[0]= SIGFOX_SHUTDOWN_MESSAGE;
-  message[1]=TD_MEASURE_VoltageTemperature(false); //voltage
+  message[1]=EncodeVoltage(voltage);
   SIGFOX_SEND(message, 2);
 }
 

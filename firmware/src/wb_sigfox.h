@@ -21,8 +21,8 @@
 #include "wb_reports.h"
 
 void WB_SIGFOX_Init();
-void WB_SIGFOX_StartupMessage(float windSpeed, float windHeading);
-void WB_SIGFOX_ShutdownMessage();
+void WB_SIGFOX_StartupMessage(float windSpeed, float windHeading, uint32_t voltage);
+void WB_SIGFOX_ShutdownMessage(uint32_t voltage);
 void WB_SIGFOX_ReportMessage(WB_REPORTS_Report_t *report, uint8_t reportCount);
 void WB_SIGFOX_LocationMessage (WB_GPS_Fix_t fix);
 void WB_SIGFOX_LocationFailureMessage ();
