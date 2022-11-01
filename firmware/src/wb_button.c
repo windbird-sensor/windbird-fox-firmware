@@ -69,6 +69,10 @@ WB_BUTTON_State_t WB_BUTTON_Loop() {
 		duration++;
 	}
 
+#ifdef DEBUG
+	duration *= 5;
+#endif
+
 	if (duration > 0) {
 
 		buttonPressedEvent = 0;

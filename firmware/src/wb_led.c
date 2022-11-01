@@ -81,8 +81,9 @@ float cubicEasing (float step, float start, float stop, float duration) {
 	return stop*(step/=duration)*step*step + start;
 }
 
-void WB_LED_Fade(WB_LED_FadeDirection_t direction, uint32_t duration) {
-	const int pwmFreq = 1000;
+void __attribute__((optimize("O0"))) WB_LED_Fade(WB_LED_FadeDirection_t direction, uint32_t duration) {
+	// we use __attribute__((optimize("O0"))) to keep the right timing
+	uint32_t pwmFreq = 1000;
 	int i;
 	int j;
 	int on;
