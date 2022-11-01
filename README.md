@@ -1,9 +1,7 @@
 # windbird-firmware
 Source files for the Windbird Firmware
 
-# THIS IS A WORK IN PROGRESS. NOT READY FOR USE
 
-# TD1208R PINOUT IS TEMPORARY AND MAY NOT BE CONSISTENT WITH THE BOARD SCHEMATICS
 
 ## License
 
