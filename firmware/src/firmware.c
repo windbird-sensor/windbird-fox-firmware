@@ -184,8 +184,9 @@ void TD_USER_Setup(void) {
 	WB_GPS_PowerOn(300);
 	while (!WB_GPS_Locate()) {
 		WB_LED_Clear();
-		WB_DEBUG("vcap: %d mV\n", WB_POWER_GetCapacitorMillivolts());
-		WB_DEBUG("vbat: %d mV\n", WB_POWER_GetBatteryMillivolts());
+		WB_DEBUG("*** gps ***\tvcap: %d\tvbat: %d\n",
+				WB_POWER_GetCapacitorMillivolts(),
+				WB_POWER_GetBatteryMillivolts());
 		ButtonLoop();
 		TD_RTC_Sleep();
 		WB_LED_Set();
@@ -196,9 +197,9 @@ void TD_USER_Setup(void) {
 }
 
 void TD_USER_Loop(void) {
-	WB_DEBUG("*** loop ***\t%d\n", TD_STACK_Usage());
+	WB_DEBUG("*** loop ***\tvcap: %d\tvbat: %d\n",
+			WB_POWER_GetCapacitorMillivolts(),
+			WB_POWER_GetBatteryMillivolts());
 	ButtonLoop();
-	WB_DEBUG("vcap: %d mV\n", WB_POWER_GetCapacitorMillivolts());
-	WB_DEBUG("vbat: %d mV\n", WB_POWER_GetBatteryMillivolts());
 }
 
