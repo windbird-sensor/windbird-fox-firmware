@@ -8,7 +8,9 @@ Get the *windbird-firmware-x.x.x.bin* file of the latest release, at https://git
 
 Use any 3.3V USB-to-UART cable (be careful not to use a 5V cable).
 
-We recommend the *FTDI TTL-232R-RPI* (cheaper) or *FTDI TTL-232R-3V3*. You can also find very cheap chinese cables (based on FT232RL, PL2303, CP2102, CH340G..), they will work too.
+We recommend the **FTDI TTL-232R-RPI** or *FTDI TTL-232R-3V3*.
+
+You can also find very cheap chinese cables (based on *FT232RL*, *PL2303*, *CP2102*, *CH340G*...), they will work too.
 
 ![FTDI TTL-232R-RPI](https://user-images.githubusercontent.com/1681443/199475597-df15238b-3611-43d0-8b0c-2d804575dbf8.png)
 
