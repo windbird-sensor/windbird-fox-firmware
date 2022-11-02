@@ -72,7 +72,7 @@ Wait a few seconds. The upgrade process will start. Do not touch or close or dis
 
 Once you read *Upgrade OK*, the Windbird is ready and will reboot. You can now disconnect everything and enjoy the new software!
 
-# Upgrading from Mac
+## Upgrading from Mac
 
 It should be possible.
 
