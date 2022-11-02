@@ -24,7 +24,7 @@ Une fois la mise à jour terminée, vous devez déconnecter le câble `TX` de la
 
 ## Mise à jour depuis Windows
 
-Téléchargez et extrayez le logiciel TDLoader : https://github.com/windbird-sensor/windbird-fox-firmware/raw/main/usb-flasher/windows/tdloader.zip
+Téléchargez et décompressez le logiciel TDLoader : https://github.com/windbird-sensor/windbird-fox-firmware/raw/main/usb-flasher/windows/tdloader.zip
 
 Ouvrez le *Device Manager* en utilisant le raccourci fourni.
 
@@ -32,7 +32,7 @@ Dans le gestionnaire de périphériques, identifiez votre câble et notez le num
 
 ![Capture d’écran du 2022-11-02 13-16-02](https://user-images.githubusercontent.com/1681443/199487441-032c4621-0b38-4532-a9c7-2051d5b8fb94.png)
 
-Si votre câble ne s'affiche pas, il se peut que vous deviez installer le pilote du câble. Le pilote pour les câbles FTDI est inclus dans tdloader.zip. Pour les autres marques, veuillez vous référer aux instructions du fabricant.
+Si votre câble ne s'affiche pas, il se peut que vous deviez installer le driver du câble. Le driver pour les câbles FTDI est inclus dans tdloader.zip. Pour les autres marques, référerez-vous aux instructions du fabricant.
 
 Lancez le logiciel TDLoader.
 
