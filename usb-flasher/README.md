@@ -46,8 +46,28 @@ Then press *Acquire* to launch the upgrade process.
 
 When you read *Synchronizing* on the screen , turn on the Windbird by pressing it's power button.
 
-At this step, the upgrade process will start. Do not touch or close or disconnect anything during the upgrade.
+The upgrade process will start. Do not touch or close or disconnect anything during the upgrade.
 
 ![image1059](https://user-images.githubusercontent.com/1681443/199490009-47fe796f-a90e-4713-8298-b9a75489bc0b.png)
+
+Once you read *Upgrade OK*, the Windbird is ready and will reboot. You can now disconnect everything and enjoy the new software!
+
+## Upgrading from Linux
+
+Download *cflash* : https://github.com/windbird-sensor/windbird-fox-firmware/raw/main/usb-flasher/linux/cflash.c
+
+Compile it : `$ gcc cflash.c -o cflash-linux`
+
+Plug the USB cable between the Windbird and your computer.
+
+Identify your serial port by running `find /dev -name "ttyUSB*" -o -name "ttyACM*"`
+
+At this step, make sure that your Windbird is shut down and that the battery is connected.
+
+Run cflash `$ ./cflash-linux -d /dev/ttyUSB0 myfirmware.bin` (replace /dev/ttyUSB0 by the path to your serial port).
+
+Power-up the Windbird by pressing on the button.
+
+Wait a few seconds. The upgrade process will start. Do not touch or close or disconnect anything during the upgrade.
 
 Once you read *Upgrade OK*, the Windbird is ready and will reboot. You can now disconnect everything and enjoy the new software!
