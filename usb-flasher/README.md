@@ -38,7 +38,7 @@ Launch TDLoader software.
 
 Enter the port number you previously noted.
 
-Select *TD1808 EVB* as product.
+Select *TD1208 EVB* as product.
 
 Click *Browse* and select the firmware file.
 
