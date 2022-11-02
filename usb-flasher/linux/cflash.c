@@ -72,7 +72,7 @@ typedef struct _HDR
 #define ERROR_READ				7
 #define	ERROR_WRITE				8
 
-#define TIMEOUT					200	//In 1/10 of second
+#define TIMEOUT					1000	//In 1/10 of second
 
 #define FRM_SZ                  60
 #define HDR_SZ                  sizeof(HDR)
@@ -96,7 +96,7 @@ typedef struct _HDR
 
 #define ESC                     0x1b
 
-#define VERSION                 "4.1"
+#define VERSION                 "4.1-windbird1"
 
 // ****************************************************************************
 // STATICS:
@@ -117,7 +117,7 @@ static unsigned long    totalBytes;
 
 static int              serial_fd;
 
-static unsigned char    product     = 1;
+static unsigned char    product     = 10;
 
 static unsigned int     baudrate    = 115200;
 
@@ -365,9 +365,8 @@ static bool upgrade(char *filename)
 	FILE *fp;
 
 	if ((fp = fopen(filename, "rb")) == NULL) {
-		printf("Failure : couldn't open file %s\r\n", filename);
-		fprintf(stderr, "ErrorCode : %d\r\n", ERROR_FILE);
-		return false;
+		fprintf(stderr, "Failure : couldn't open file %s\r\n", filename);
+		return ERROR_FILE;
 	}
     fseek(fp, 0L, SEEK_END);
 
@@ -375,9 +374,12 @@ static bool upgrade(char *filename)
 	totalBytes = ftell(fp);
     fseek(fp, 0L, SEEK_SET);
     printf("Flashing %ld bytes on products id %#-2.2x\r\n", totalBytes, product);
-	printf("Synchronising, any key to abort...\r\n");
-	SendReset(serial_fd);
-	printf("ATZ reset sent...\r\n");
+    
+	printf("\r\n\e[33mTo start programming, now turn on the Windbird by pressing the power button.\e[m\r\n");
+	printf("or press any key to abort...\r\n");
+	printf("If it's already on, turn it off and turn it on again.\r\n");
+	// SendReset(serial_fd);
+	// printf("ATZ reset sent...\r\n");
 	flood = 'X';
 	ret = write(serial_fd, &flood, 1);
 
@@ -386,9 +388,9 @@ static bool upgrade(char *filename)
 		ret = write(serial_fd, &flood, 1);
 		cpt++;
 	}
-        printf ("cpt: %d - c: %02x / %c\r\n", cpt, c, c);
+        // printf ("cpt: %d - c: %02x / %c\r\n", cpt, c, c);
 	if (c == ACK_UPGRADE) {
-		printf("Dans upgrade - product: %02x...\r\n", product);
+		// printf("Dans upgrade - product: %02x...\r\n", product);
 		memset(binline, 0, FRM_SZ);
 		binline[DAT_SZ] = 0x2B;	//'+';
 		hdr->product = product;
@@ -400,50 +402,38 @@ static bool upgrade(char *filename)
 #endif
 			ret = write(serial_fd, binline, FRM_SZ);
 			if ((c = waitack(10000)) != ACK) {
-				printf("Did not get local ACK (%02x)\r\n", c);
-				fprintf(stderr, "ErrorCode : %d\r\n", ERROR_ACK);
+				fprintf(stderr, "Did not get local ACK (%02x)\r\n", c);
 				fclose(fp);
-				return false;
+				return ERROR_ACK;
 			}
 #if CONSOLE
 			sleep(2);
 		}
 #endif
 	} else if (cpt >= TIMEOUT) {
-		printf("Synchronisation timeout\r\n");
-		fprintf(stderr, "ErrorCode : %d\r\n", ERROR_SYNC);
-		return false;
+		fprintf(stderr, "Synchronisation timeout\r\n");
+		return ERROR_SYNC;
 	} else {
 		getchar();
-		printf("Synchronisation interrupted\r\n");
-		fprintf(stderr, "ErrorCode : %d\r\n", ERROR_SYNC);
-		return false;
+		fprintf(stderr, "Synchronisation interrupted\r\n");
+		return ERROR_SYNC;
 	}
 
 #if CONSOLE
     if (getch() != 'U') {
-        printf("Interrupted...\r\n");
-		fprintf(stderr, "ErrorCode : %d\r\n", ERROR_INT);
-        return false;
+        fprintf(stderr, "Interrupted...\r\n");
+        return ERROR_INT;
     }
 #endif
 
-    printf("Upgrading, hit ESC to abort...\r\n");
+    printf("\r\nUpgrading... Do not close or disconnect!\r\n");
     hdr->command = WRITE_FLASH;
     while (true) {
-        if (kbhit() && (getch() == ESC)) {
-
-			// keyboard interrupt
-			printf("\r\nFlashing interrupted\r\n");
-		    fprintf(stderr, "ErrorCode : %d\r\n", ERROR_FLASH);
-            return false;
-        }
         if ((sz = fread(&binline[HDR_SZ], 1, DAT_SZ, fp)) < 0) {
 
             // file read error
-            printf("\r\nRead error (%s)\r\n", strerror(errno));
-            fprintf(stderr, "ErrorCode : %d\r\n", ERROR_READ);
-            return false;
+            fprintf(stderr, "\r\nRead error (%s)\r\n", strerror(errno));
+            return ERROR_READ;
         }
         if (sz == 0) {
 
@@ -457,16 +447,14 @@ static bool upgrade(char *filename)
 	    if ((ret = write(serial_fd, binline, FRM_SZ)) != FRM_SZ) {
 
             // send data packet
-            printf("\r\nWrite error (%d/%d)\r\n", ret, FRM_SZ);
-	    	fprintf(stderr, "ErrorCode : %d\r\n", ERROR_WRITE);
-            return false;
+            fprintf(stderr, "\r\nWrite error (%d/%d)\r\n", ret, FRM_SZ);
+            return ERROR_WRITE;
 	    }
 	    if (waitack(6000) != ACK ) {
  
             // wait for local acknowledge
-			printf("\r\nWrite ack error\r\n");
-			fprintf(stderr, "ErrorCode : %d\r\n", ERROR_WRITE);
-			return false;
+			fprintf(stderr, "\r\nWrite ack error\r\n");
+			return ERROR_WRITE;
 		}
 	    hdr->address += DAT_SZ;
 	    // update completion indicator
@@ -479,7 +467,7 @@ static bool upgrade(char *filename)
 	    // important: wait 50ms
 		usleep(50000);
     }
-    printf("\r\nUpgrade OK\r\n");
+    printf("\r\n\r\n\e[32m\e[1mUpgrade OK!\e[m\r\n\r\n");
 
     // reboot product
 	hdr->command = REBOOT;
@@ -489,12 +477,10 @@ static bool upgrade(char *filename)
     }
     write(serial_fd, binline, FRM_SZ);
     if (waitack(6000) != ACK_REBOOT) {
-		printf("Did not get local ACK for reboot\r\n");
-		fprintf(stderr, "ErrorCode : %d\r\n", ERROR_REBOOT);
-		return false;
+		fprintf(stderr, "Did not get local ACK for reboot\r\n");
+		return ERROR_REBOOT;
 	}
-    fprintf(stderr, "ErrorCode : %d\r\n", SUCCESS);
-    return true;
+    return SUCCESS;
 }
 
 // shows how to use this program
@@ -518,6 +504,7 @@ int main(int argc, char *argv[])
 
     printf("cflash version %s\n", VERSION);
     printf("Copyright (c) 2012-2013 Telecom Design S.A.\n");
+    printf("Adaptation for Windbird (c) 2022 Nicolas Baldeck\n");
     while ((opt = getopt(argc, argv, "d:p:b:th?")) > 0) {
         switch (opt) {
             case 'p':
@@ -547,6 +534,8 @@ int main(int argc, char *argv[])
     // Open the serial port
 	if ((serial_fd = open_serialport(dev)) < 0) {
         printf("Can't open %s. %s (%d).\r\n", dev, strerror(errno), errno);
+        printf("Available serial ports:\r\n");
+        system("find /dev -name \"ttyUSB*\" -o -name \"ttyACM*\"");
         exit(1);
     }
     set_conio_terminal_mode();
