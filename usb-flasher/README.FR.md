@@ -74,7 +74,7 @@ Allumez le Windbird sous tension en appuyant sur le bouton.
 
 Attendez quelques secondes. Le processus de mise à jour va commencer. Ne touchez à rien, ne quittez rien et ne déconnectez rien pendant la mise à jour.
 
-Lorsque vous lisez *Upgrade OK*, la Windbird est prête et va redémarrer. Vous pouvez maintenant tout déconnecter et profiter du nouveau logiciel !
+Lorsque vous lisez *Upgrade OK*, le Windbird est prêt et va redémarrer. Vous pouvez maintenant tout déconnecter et profiter du nouveau logiciel !
 
 ## Mise à jour depuis Mac
 
