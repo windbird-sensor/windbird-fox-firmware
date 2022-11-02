@@ -12,11 +12,13 @@ We recommend the *FTDI TTL-232R-RPI* (cheaper) or *FTDI TTL-232R-3V3*. You can a
 
 ![FTDI TTL-232R-RPI](https://user-images.githubusercontent.com/1681443/199475597-df15238b-3611-43d0-8b0c-2d804575dbf8.png)
 
-Connect the cable to the board. If you use another brand than FTDI, the colors of the cables might be different.
+Connect the cable to the board. If you use another brand than FTDI, the colors of the wires might be different.
 
 ![wb uart wiring](https://user-images.githubusercontent.com/1681443/199485309-e7c597e3-cab4-4dad-a36c-c2b6f6c09b66.png)
 
 The battery must be plugged in. There is no need to remove the board from the Windbird's plastic body.
+
+Once the upgrade is finished, you must disconnect the `TX` cable from the board : the GPS will not work as long as the `TX` wire is connected. The other  wires (`RX` and `GND`) won't cause any perturbation if left connected .
 
 ## Upgrading from Windows
 
