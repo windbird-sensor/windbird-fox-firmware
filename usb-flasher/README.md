@@ -1,5 +1,7 @@
 # How to upgrade the firmware
 
+Instructions en Français : https://github.com/windbird-sensor/windbird-fox-firmware/blob/main/usb-flasher/README.FR.md
+
 ## Download the firmware
 
 Get the *windbird-firmware-x.x.x.bin* file of the latest release, at https://github.com/windbird-sensor/windbird-fox-firmware/releases
