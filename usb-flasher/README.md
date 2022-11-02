@@ -54,7 +54,7 @@ Once you read *Upgrade OK*, the Windbird is ready and will reboot. You can now d
 
 ## Upgrading from Linux
 
-Download *cflash* : https://github.com/windbird-sensor/windbird-fox-firmware/raw/main/usb-flasher/linux/cflash.c
+Download *cflash* : `$ curl https://github.com/windbird-sensor/windbird-fox-firmware/raw/main/usb-flasher/linux/cflash.c -o cflash.c`
 
 Compile it : `$ gcc cflash.c -o cflash-linux`
 
