@@ -56,7 +56,7 @@ Attendez quelques secondes. Le processus de mise à jour va commencer. Ne touche
 
 Lorsque vous lisez *Upgrade OK*, le Windbird est prêt et va redémarrer. Vous pouvez maintenant tout déconnecter et profiter du nouveau logiciel !
 
-## Mise à niveau depuis Linux
+## Mise à jour depuis Linux
 
 Téléchargez *cflash* : `$ curl https://github.com/windbird-sensor/windbird-fox-firmware/raw/main/usb-flasher/linux/cflash.c -o cflash.c`
 
@@ -76,7 +76,7 @@ Attendez quelques secondes. Le processus de mise à jour va commencer. Ne touche
 
 Lorsque vous lisez *Upgrade OK*, la Windbird est prête et va redémarrer. Vous pouvez maintenant tout déconnecter et profiter du nouveau logiciel !
 
-## Mise à niveau à partir de Mac
+## Mise à jour depuis Mac
 
 Ça devrait être possible.
 
