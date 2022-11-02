@@ -71,3 +71,13 @@ Power-up the Windbird by pressing on the button.
 Wait a few seconds. The upgrade process will start. Do not touch or close or disconnect anything during the upgrade.
 
 Once you read *Upgrade OK*, the Windbird is ready and will reboot. You can now disconnect everything and enjoy the new software!
+
+# Upgrading from Mac
+
+It should be possible.
+
+However, I have not been able to make `cflash` work on Mac.
+
+See https://github.com/windbird-sensor/windbird-fox-firmware/blob/main/usb-flasher/mac/compilation.md
+
+Any help is welcome
