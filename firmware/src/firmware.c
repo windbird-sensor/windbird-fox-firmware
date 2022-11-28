@@ -23,6 +23,7 @@
 #include <td_uart.h>
 #include <td_sigfox.h>
 #include <td_utils.h>
+#include <td_scheduler.h>
 
 #include "wb_debug.h"
 #include "wb_led.h"
@@ -143,14 +144,15 @@ void TD_USER_Setup(void) {
 	WB_BUTTON_Init();
 
 	while (true) {
-		uint32_t voltage = WB_POWER_GetCapacitorMillivolts();
-		WB_DEBUG("vcap: %d mV\n", voltage);
-		if (voltage < 2500) {
+		uint32_t vcap = WB_POWER_GetCapacitorMillivolts();
+		uint32_t vbat = WB_POWER_GetBatteryMillivolts();
+		WB_DEBUG("vcap: %d mV \t %d mV\n", vcap, vbat);
+		if (vcap < 2500) {
 			WB_LED_Set();
 			TD_RTC_Delay(TMS(10));
 			WB_LED_Clear();
 			TD_RTC_Delay(TMS(1990));
-		} else if (voltage < 3300) {
+		} else if (vcap < 3300) {
 			WB_LED_Set();
 			TD_RTC_Delay(TMS(10));
 			WB_LED_Clear();
@@ -166,6 +168,7 @@ void TD_USER_Setup(void) {
 			Shutdown(true);
 		}
 		TD_WATCHDOG_Feed();
+		TD_SCHEDULER_Process();
 	}
 
 	WB_REPORTS_Init();

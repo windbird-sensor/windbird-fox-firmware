@@ -17,6 +17,8 @@
 #ifndef WB_DEBUG_H_
 #define WB_DEBUG_H_
 
+#define DEBUG_WINDBIRD
+
 #ifdef DEBUG_WINDBIRD
 #include <td_printf.h>
 #define WB_DEBUG(...) tfp_printf(__VA_ARGS__)
