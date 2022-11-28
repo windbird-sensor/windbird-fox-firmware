@@ -14,7 +14,7 @@
  * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
- 
+
 #include <efm32.h>
 #include <em_gpio.h>
 #include <em_emu.h>
@@ -152,7 +152,7 @@ void TD_USER_Setup(void) {
 			TD_RTC_Delay(TMS(10));
 			WB_LED_Clear();
 			TD_RTC_Delay(TMS(1990));
-		} else if (vcap < 3300) {
+		} else if (vcap < 2900) {
 			WB_LED_Set();
 			TD_RTC_Delay(TMS(10));
 			WB_LED_Clear();
