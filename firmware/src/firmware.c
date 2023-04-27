@@ -87,7 +87,4 @@ void TD_USER_Setup(void) {
 void TD_USER_Loop(void) {
 	//LWB_SERIAL_Debugln("loop %d %d %d",  TD_RTC_Now(), LWB_SCHEDULER_Millis(), LWB_UTILS_StackUsage());
 	//if (LWB_SCHEDULER_Millis() == 10000) TD_SIGFOX_SendV1(MODE_FRAME, 0, message, 12, 2, 0, 0);
-
-
-
 }

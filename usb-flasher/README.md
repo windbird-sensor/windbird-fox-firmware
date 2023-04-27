@@ -1,5 +1,7 @@
 # How to upgrade the firmware
 
+Instructions en Français : https://github.com/windbird-sensor/windbird-fox-firmware/blob/main/usb-flasher/README.FR.md
+
 ## Download the firmware
 
 Get the *windbird-firmware-x.x.x.bin* file of the latest release, at https://github.com/windbird-sensor/windbird-fox-firmware/releases
@@ -8,15 +10,19 @@ Get the *windbird-firmware-x.x.x.bin* file of the latest release, at https://git
 
 Use any 3.3V USB-to-UART cable (be careful not to use a 5V cable).
 
-We recommend the *FTDI TTL-232R-RPI* (cheaper) or *FTDI TTL-232R-3V3*. You can also find very cheap chinese cables, they will work too.
+We recommend the **FTDI TTL-232R-RPI** or *FTDI TTL-232R-3V3*.
+
+You can also find very cheap chinese cables (based on *FT232RL*, *PL2303*, *CP2102*, *CH340G*...), they will work too.
 
 ![FTDI TTL-232R-RPI](https://user-images.githubusercontent.com/1681443/199475597-df15238b-3611-43d0-8b0c-2d804575dbf8.png)
 
-Connect the cable to the board. If you use another brand than FTDI, the colors of the cables might be different.
+Connect the cable to the board. If you use another brand than FTDI, the colors of the wires might be different.
 
 ![wb uart wiring](https://user-images.githubusercontent.com/1681443/199485309-e7c597e3-cab4-4dad-a36c-c2b6f6c09b66.png)
 
 The battery must be plugged in. There is no need to remove the board from the Windbird's plastic body.
+
+Once the upgrade is finished, you must disconnect the `TX` cable from the board : the GPS will not work as long as the `TX` wire is connected. The other  wires (`RX` and `GND`) won't cause any perturbation if left connected .
 
 ## Upgrading from Windows
 
@@ -34,7 +40,7 @@ Launch TDLoader software.
 
 Enter the port number you previously noted.
 
-Select *TD1808 EVB* as product.
+Select *TD1208 EVB* as product.
 
 Click *Browse* and select the firmware file.
 
