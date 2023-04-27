@@ -1,6 +1,6 @@
 /**************************************************************************
- * @file WB_button.h
- * @brief Button API for WINDBIRD's firmware
+ * @file WB_compass.h
+ * @brief Compass Sensor API for WINDBIRD's firmware
  * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
@@ -14,18 +14,18 @@
  * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
- 
-#ifndef WB_BUTTON_H_
-#define WB_BUTTON_H_
 
-typedef enum {
-	WB_BUTTON_NO_ACTION,
-	WB_BUTTON_PRESSED_POWER_SWITCH,
-	WB_BUTTON_PRESSED_CALIBRATION,
-	} WB_BUTTON_State_t;
+#ifndef LWB_COMPASS_H_
+#define LWB_COMPASS_H_
 
-void WB_BUTTON_Init();
+#include <stdint.h>
+#include <stdbool.h>
 
-WB_BUTTON_State_t WB_BUTTON_Loop();
+void LWB_COMPASS_Init();
+bool LWB_COMPASS_Calibrate();
+bool LWB_COMPASS_Test();
+bool LWB_COMPASS_GetRaw(int *x, int *y, int *z);
+float LWB_COMPASS_GetHeading();
+float LWB_COMPASS_GetHeadingFromRaw(int x, int y, int z);
 
-#endif /* WB_BUTTON_H_ */
+#endif /* WB_COMPASS_H_ */

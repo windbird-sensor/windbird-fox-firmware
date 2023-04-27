@@ -1,0 +1,139 @@
+/*
+ * wb_hw.h
+ *
+ *  Created on: 9 Apr 2023
+ *      Author: windbird-dev
+ */
+
+#ifndef WB_CONFIG_H_
+#define WB_CONFIG_H_
+
+// ----------- CONFIGURATION ---------
+
+#define SCHEDULER_CALENDAR_LENGTH_MS (7*24*3600*1000)
+#define SCHEDULER_SAMPLING_MS 250 // must be an integer divider to 1000
+#define SCHEDULER_SAMPLING_TICKS (32768*SCHEDULER_SAMPLING_MS/1000)
+
+#define SAMPLES_PER_SECOND (1000/SCHEDULER_SAMPLING_MS)
+
+#define METRICS_SAMPLES_PER_SECOND 1
+
+#define METRICS_SAMPLES_COUNT 600
+#define METRICS_NPERIODS 2 // must be an integer divider to METRICS_SAMPLES_COUNT
+#define METRICS_PER_PERIOD (METRICS_SAMPLES_COUNT/METRICS_NPERIODS)
+
+#define SPEED_HZ_TO_KMH 0.735 // wind tunnel calibration
+
+#define DEBUG_WINDBIRD
+// #define DEBUG_FORCE_CONSOLE
+
+#define COMPASS_XSCALE_DEFAULT 1.
+#define COMPASS_YSCALE_DEFAULT 1.
+#define COMPASS_ZSCALE_DEFAULT 1.
+#define COMPASS_XOFFSET_DEFAULT 0.
+#define COMPASS_YOFFSET_DEFAULT 0.
+#define COMPASS_ZOFFSET_DEFAULT 0.
+
+// ---------- SETTINGS ----------------
+
+#define SETTING_PRODUCTNAME 0
+#define SETTING_PRODUCTNAME_LEN 5
+#define SETTING_DEVICEPREFIX 5
+#define SETTING_DEVICEID 6
+#define SETTING_HWVERSION 7
+#define SETTING_MFGPASS 8
+#define SETTING_TXPOWER 9
+#define SETTING_COMPASS_XSCALE 10
+#define SETTING_COMPASS_YSCALE 11
+#define SETTING_COMPASS_ZSCALE 12
+#define SETTING_COMPASS_XOFFSET 13
+#define SETTING_COMPASS_YOFFSET 14
+#define SETTING_COMPASS_ZOFFSET 15
+// max 127
+
+// -----------  PINOUT -----------------
+
+//  1 - GND
+
+//  2 - GND
+
+//  3 - RESERVED
+
+//  4 - C14 - VAUX
+#define VAUX_PORT gpioPortC
+#define VAUX_BIT 14
+
+//  5 - F0 - SWDCLK
+
+//  6 - F1 - SWDIO
+
+//  7 - A0 - SDA
+#define I2C_SDA_PORT gpioPortA
+#define I2C_SDA_PIN  0
+#define I2C_LOCATION 0
+
+//  8 - A1 - SCL
+#define I2C_SCL_PORT gpioPortA
+#define I2C_SCL_PIN  1
+
+//  9 - VDD
+
+// 10 - C0 - PULSE_SW
+#define PULSECOUNTER_PORT	gpioPortC
+#define PULSECOUNTER_BIT	0
+#define PULSECOUNTER_LOCATION PCNT_ROUTE_LOCATION_LOC2
+// 11 - GND
+
+// -----
+
+// 25 - RF_GND
+
+// 24 - RF
+
+// 23 - RF_GND
+
+// 22 - GND
+
+// 21 - D7 - VBAT_SENSE
+#define VBAT_ADC_CHANNEL adcSingleInpCh7
+#define VBAT_TOP_RESISTOR 27
+#define VBAT_BOTTOM_RESISTOR 10
+#define VBAT_GET_MILLIVOLTS LWB_ADC_SampleMillivolts(VBAT_ADC_CHANNEL, VBAT_TOP_RESISTOR, VBAT_BOTTOM_RESISTOR)
+
+// 20 - D6 - VCAP_SENSE
+#define VCAP_ADC_CHANNEL adcSingleInpCh6
+#define VCAP_TOP_RESISTOR 27
+#define VCAP_BOTTOM_RESISTOR 10
+#define VCAP_GET_MILLIVOLTS LWB_ADC_SampleMillivolts(VCAP_ADC_CHANNEL, VCAP_TOP_RESISTOR, VCAP_BOTTOM_RESISTOR)
+
+// 19 - D5 - RX
+
+// 18 - D4 - TX
+
+// 17 - C15 - LED
+#define LED_PORT gpioPortC
+#define LED_BIT 15
+
+// 16 - B13
+
+// 15 - B11 - USR_SW
+#define BUTTON_PORT gpioPortB
+#define BUTTON_BIT 11
+#define BUTTON_MASK (1 << BUTTON_BIT)
+
+// 14 - nRST
+
+// 13 - C1 - GPS_ON
+#define GPS_POWER_PORT gpioPortC
+#define GPS_POWER_BIT 1
+
+// 12 - GND
+
+
+// ------ PLATFORM ------------
+/* DMA channels */
+#define DMA_CHANNEL_I2C_TX 0
+#define DMA_CHANNEL_I2C_RX 1
+
+
+#endif /* WB_CONFIG_H_ */

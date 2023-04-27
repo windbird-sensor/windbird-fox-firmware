@@ -13,16 +13,18 @@
  *
  ******************************************************************************/
 
-#ifndef WB_POWER_H_
-#define WB_POWER_H_
+#ifndef LWB_EFM32G_ADC_H_
+#define LWB_EFM32G_ADC_H_
 
-#define VAUX_PORT gpioPortC
-#define VAUX_BIT 14
+#include "../../libwindbird.h"
 
-void WB_POWER_Init();
-uint32_t WB_POWER_GetBatteryMillivolts();
-uint32_t WB_POWER_GetCapacitorMillivolts();
-void WB_POWER_EnableVAUX();
-void WB_POWER_DisableVAUX();
+#ifdef LWB_PLATFORM_EFM32G
 
-#endif /* WB_POWER_H_ */
+#include <em_adc.h>
+
+uint32_t LWB_ADC_SampleMillivolts(ADC_SingleInput_TypeDef input, uint32_t rTop, uint32_t rBottom);
+uint32_t LWB_ADC_SampleRaw(ADC_SingleInput_TypeDef input);
+
+#endif /* LWB_PLATFORM_EFM32G */
+
+#endif /* LWB_EFM32G_ADC_H_ */

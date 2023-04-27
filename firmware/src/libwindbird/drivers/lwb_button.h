@@ -1,7 +1,7 @@
 /**************************************************************************
- * @file WB_i2c.h
- * @brief I2C API for WINDBIRD's firmware
-  * @author Nicolas BALDECK
+ * @file WB_button.h
+ * @brief Button API for WINDBIRD's firmware
+ * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
  * (C) Copyright 2015 Bac Plus Zéro S.A.S.
@@ -15,18 +15,22 @@
  *
  ******************************************************************************/
 
-#ifndef WB_I2C_H_
-#define WB_I2C_H_
+#ifndef LWB_BUTTON_H_
+#define LWB_BUTTON_H_
 
-#include <stdint.h>
-#include <stdbool.h>
+typedef enum {
+	LWB_BUTTON_NO_ACTION,
+	LWB_BUTTON_PRESSED_POWER_SWITCH,
+	LWB_BUTTON_PRESSED_CALIBRATION,
+	} LWB_BUTTON_State_t;
 
-#define WB_I2C_DEFAULT_TIMEOUT 10000
+void LWB_BUTTON_Init();
 
-void WB_I2C_Init();
-void WB_I2C_Enable(bool isEnabled);
-int8_t WB_I2C_ReadByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint16_t timeout);
-int8_t WB_I2C_ReadBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout);
-bool WB_I2C_WriteByte(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint16_t timeout);
+LWB_BUTTON_State_t LWB_BUTTON_Process();
 
-#endif /* WB_I2C_H_ */
+#ifdef LWB_PLATFORM_TD120X
+#else
+	#error Not implemented for this platform
+#endif
+
+#endif /* WB_BUTTON_H_ */

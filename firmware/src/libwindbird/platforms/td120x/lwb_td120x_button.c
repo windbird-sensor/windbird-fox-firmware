@@ -14,17 +14,19 @@
  * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
- 
+#include "../../libwindbird.h"
+
+#ifdef LWB_PLATFORM_TD120X
+
+#include "../../../wb_config.h"
+
 #include <em_gpio.h>
 #include <td_core.h>
 
 
-#include "wb_debug.h"
-#include "wb_button.h"
+#include "../../drivers/lwb_button.h"
+#include "../../core/lwb_serial.h"
 
-#define BUTTON_PORT gpioPortB
-#define BUTTON_BIT 11
-#define BUTTON_MASK (1 << BUTTON_BIT)
 
 #define DELAY_DEBOUNCING 10000
 #define DELAY_TOO_LONG 2000000
@@ -36,7 +38,7 @@ static void InterruptCallback(uint32_t mask) {
 	buttonPressedEvent=true;
 }
 
-void WB_BUTTON_Init() {
+void LWB_BUTTON_Init() {
 
 	int type;
 	IRQn_Type irq_parity;
@@ -59,9 +61,9 @@ void WB_BUTTON_Init() {
 	NVIC_EnableIRQ(irq_parity);
 }
 
-WB_BUTTON_State_t WB_BUTTON_Loop() {
+LWB_BUTTON_State_t LWB_BUTTON_Process() {
 
-	WB_BUTTON_State_t state = WB_BUTTON_NO_ACTION;
+	LWB_BUTTON_State_t state = LWB_BUTTON_NO_ACTION;
 
 	uint32_t duration = 0;
 
@@ -78,15 +80,17 @@ WB_BUTTON_State_t WB_BUTTON_Loop() {
 		buttonPressedEvent = 0;
 
 		if (duration == DELAY_CALIBRATION) {
-			state = WB_BUTTON_PRESSED_CALIBRATION;
+			state = LWB_BUTTON_PRESSED_CALIBRATION;
 		} else if (duration > DELAY_TOO_LONG) {
 			// nop
 		} else if (duration >= DELAY_DEBOUNCING) {
-			state = WB_BUTTON_PRESSED_POWER_SWITCH;
+			state = LWB_BUTTON_PRESSED_POWER_SWITCH;
 		}
 
-		WB_DEBUG("button event duration : %d\n", duration);
+		LWB_SERIAL_Debugln("button event duration : %d", duration);
 	}
 
 	return state;
 }
+
+#endif /* LWB_PLATFORM_TD120X */

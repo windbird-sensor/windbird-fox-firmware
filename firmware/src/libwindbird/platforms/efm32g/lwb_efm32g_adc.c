@@ -13,34 +13,27 @@
  *
  ******************************************************************************/
 
-#include <efm32.h>
-#include <em_gpio.h>
+#include "lwb_efm32g_adc.h"
+
+#ifdef LWB_PLATFORM_EFM32G
+
+#include "../../../wb_config.h"
+
 #include <em_adc.h>
 #include <em_cmu.h>
-
-#include <td_core.h>
-
-#include "wb_power.h"
-#include "wb_debug.h"
-
-#define VCAP_ADC_CHANNEL adcSingleInpCh6 // D6
-#define VBAT_ADC_CHANNEL adcSingleInpCh7 // D7
 
 #define ADC_REFERENCE adcRef1V25
 #define ADC_REFERENCE_MV 1250
 #define ADC_RESOLUTION 4096
-
-#define TOP_RESISTOR 2700000
-#define BOTTOM_RESISTOR 1000000
 
  // datasheet page 82
 
 
 static volatile bool AdcLock = false;
 
-uint32_t ToMillivolts(uint32_t value) {
+uint32_t ToMillivolts(uint32_t value, uint32_t rTop, uint32_t rBottom) {
 	uint32_t adcVoltage = value * ADC_REFERENCE_MV / ADC_RESOLUTION;
-	return adcVoltage * (TOP_RESISTOR + BOTTOM_RESISTOR) / BOTTOM_RESISTOR;
+	return adcVoltage * (rTop + rBottom) / rBottom;
 }
 
 /*
@@ -48,8 +41,7 @@ uint32_t ToMillivolts(uint32_t value) {
  * with a higher acquisition time (adcAcqTime16) to account for
  * high impedance of the voltage dividers on Winbird board.
  */
-uint32_t SampleAdc(ADC_SingleInput_TypeDef input,
-	ADC_Ref_TypeDef ref)
+uint32_t LWB_ADC_SampleRaw(ADC_SingleInput_TypeDef input /*, ADC_Ref_TypeDef ref*/)
 {
 	uint32_t setpoint;
 	bool AlreadyLocked;
@@ -82,7 +74,7 @@ uint32_t SampleAdc(ADC_SingleInput_TypeDef input,
 		ADC_Init(ADC0, &init);
 
 		// Set reference and input
-		single_init.reference = ref;
+		single_init.reference = ADC_REFERENCE;
 		single_init.input = input;
 		single_init.acqTime = adcAcqTime16; // added for Windbird
 		ADC_InitSingle(ADC0, &single_init);
@@ -111,27 +103,8 @@ uint32_t SampleAdc(ADC_SingleInput_TypeDef input,
 	return(setpoint);
 }
 
-uint32_t WB_POWER_GetBatteryMillivolts() {
-	return ToMillivolts(SampleAdc(VBAT_ADC_CHANNEL, ADC_REFERENCE));
+uint32_t LWB_ADC_SampleMillivolts(ADC_SingleInput_TypeDef input, uint32_t rTop, uint32_t rBottom) {
+	return ToMillivolts(LWB_ADC_SampleRaw(input), rTop, rBottom);
 }
 
-uint32_t WB_POWER_GetCapacitorMillivolts() {
-	return ToMillivolts(SampleAdc(VCAP_ADC_CHANNEL, ADC_REFERENCE));
-}
-
-void WB_POWER_Init() {
-	WB_DEBUG("vcap: %d mV\n", WB_POWER_GetCapacitorMillivolts());
-	WB_DEBUG("vbat: %d mV\n", WB_POWER_GetBatteryMillivolts());
-
-	GPIO_DriveModeSet(VAUX_PORT, gpioDriveModeHigh);
-	GPIO_PinModeSet(VAUX_PORT, VAUX_BIT, gpioModePushPullDrive, 0);
-	WB_POWER_EnableVAUX();
-}
-
-void WB_POWER_EnableVAUX() {
-	GPIO_PinOutSet(VAUX_PORT, VAUX_BIT);
-}
-
-void WB_POWER_DisableVAUX() {
-	GPIO_PinOutClear(VAUX_PORT, VAUX_BIT);
-}
+#endif /* LWB_PLATFORM_EFM32G */

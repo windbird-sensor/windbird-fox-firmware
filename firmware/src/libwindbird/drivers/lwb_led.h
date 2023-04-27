@@ -14,23 +14,19 @@
  * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
-#ifndef WB_LED_H_
-#define WB_LED_H_
+#ifndef LWB_LED_H_
+#define LWB_LED_H_
 
-#define LED_PORT gpioPortC
-#define LED_BIT 15
+#include <stdint.h>
 
 typedef enum {
-	WB_LED_FADE_IN,
-	WB_LED_FADE_OUT,
-	} WB_LED_FadeDirection_t;
+	LWB_LED_FADE_IN,
+	LWB_LED_FADE_OUT,
+	} LWB_LED_FadeDirection_t;
 
-void WB_LED_Init();
-void WB_LED_Test();
-void WB_LED_Clear();
-void WB_LED_Set();
-void WB_LED_StartBlink(uint8_t seconds, uint16_t ticks);
-void WB_LED_StopBlink();
-void WB_LED_Fade(WB_LED_FadeDirection_t direction, uint32_t duration);
+void LWB_LED_Init();
+void LWB_LED_Clear();
+void LWB_LED_Set();
+void LWB_LED_Fade(LWB_LED_FadeDirection_t direction, uint32_t duration);
 
-#endif /* WB_LED_H_ */
+#endif /* LWB_LED_H_ */

@@ -1,10 +1,10 @@
 /**************************************************************************
- * @file WB_gps.h
- * @brief GPS API for WINDBIRD's firmware
+ * @file debug.h
+ * @brief Debug functions for WINDBIRD's firmware
  * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
- * (C) Copyright 2015 Bac Plus ZÃ©ro S.A.S.
+ * (C) Copyright 2015 Bac Plus Zéro S.A.S.
  * (C) Copyright 2016 Altostratus SA
  * (C) Copyright 2021 OpenWindMap SCIC SA
  ******************************************************************************
@@ -14,20 +14,17 @@
  * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
- 
-#ifndef WB_GPS_H_
-#define WB_GPS_H_
+#ifndef LWB_SERIAL_H_
+#define LWB_SERIAL_H_
 
-typedef struct {
-	int32_t latitude;
-	int32_t longitude;
-	int16_t altitude;
-	uint8_t hdop;
-} WB_GPS_Fix_t;
+#include "../libwindbird.h"
 
-void WB_GPS_Init();
-bool WB_GPS_Locate();
-void WB_GPS_PowerOn(uint16_t timeout);
-void WB_GPS_PowerOff();
+#ifdef LWB_PLATFORM_TD120X
+	#include "../platforms/td120x/lwb_td120x_serial.h"
+#else
+	#error Not implemented for this platform
+#endif
 
-#endif /* WB_GPS_H_ */
+
+
+#endif /* LWB_SERIAL_H_ */

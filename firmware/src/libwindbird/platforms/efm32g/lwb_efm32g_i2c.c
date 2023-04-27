@@ -14,31 +14,28 @@
  * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
+#include "../../../wb_config.h"
+#include "../../libwindbird.h"
 
+#ifdef LWB_PLATFORM_EFM32G
+
+#include "../../core/lwb_i2c.h"
 
 #include <em_cmu.h>
 #include <em_gpio.h>
 #include <em_i2c.h>
 
-#define I2C_SDA_PORT gpioPortA
-#define I2C_SDA_PIN 0
-#define I2C_SDA_MODE gpioModeWiredAnd
-#define I2C_SDA_DOUT 1
-
-#define I2C_SCL_PORT gpioPortA
-#define I2C_SCL_PIN 1
-#define I2C_SCL_MODE gpioModeWiredAnd
-#define I2C_SCL_DOUT 1
-
 /** Initialize I2C0
  */
-void WB_I2C_Init() {
+void LWB_I2C_Init() {
 	CMU_ClockEnable(cmuClock_I2C0, true);
 
-	GPIO_PinModeSet(I2C_SDA_PORT, I2C_SDA_PIN, I2C_SDA_MODE, I2C_SDA_DOUT);
-	GPIO_PinModeSet(I2C_SCL_PORT, I2C_SCL_PIN, I2C_SCL_MODE, I2C_SCL_DOUT);
+	GPIO_PinModeSet(I2C_SCL_PORT, I2C_SCL_PIN, gpioModeWiredAnd, 1);
+	GPIO_PinModeSet(I2C_SDA_PORT, I2C_SDA_PIN, gpioModeWiredAnd, 1);
 
-	I2C0->ROUTE |= I2C_ROUTE_SDAPEN | I2C_ROUTE_SCLPEN;
+ 	I2C0->ROUTE = I2C_ROUTE_SDAPEN | I2C_ROUTE_SCLPEN |
+                (I2C_LOCATION << _I2C_ROUTE_LOCATION_SHIFT);
+
 
 	const I2C_Init_TypeDef init = I2C_INIT_DEFAULT;
 	I2C_Init(I2C0, &init);
@@ -50,7 +47,7 @@ void WB_I2C_Init() {
 /** Enable or disable I2C
  * @param isEnabled true = enable, false = disable
  */
-void WB_I2C_Enable(bool isEnabled) {
+void LWB_I2C_Enable(bool isEnabled) {
 
  I2C_Enable(I2C0, isEnabled);
  CMU_ClockEnable(cmuClock_I2C0, isEnabled);
@@ -80,7 +77,7 @@ I2C_TransferReturn_TypeDef Transfer(I2C_TransferSeq_TypeDef *seq, uint16_t timeo
  * @param timeout Optional read timeout in milliseconds (0 to disable, leave off to use default class value in I2Cdev::readTimeout)
  * @return I2C_TransferReturn_TypeDef http://downloads.energymicro.com/documentation/doxygen/group__I2C.html
  */
-int8_t WB_I2C_ReadBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout) {
+int8_t LWB_I2C_ReadBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout) {
 
 	I2C_TransferSeq_TypeDef seq;
 
@@ -113,8 +110,8 @@ int8_t WB_I2C_ReadBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_
  * @param timeout Optional read timeout in milliseconds (0 to disable, leave off to use default class value in I2Cdev::readTimeout)
  * @return Status of read operation (true = success)
  */
-int8_t WB_I2C_ReadByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint16_t timeout) {
-	return WB_I2C_ReadBytes(devAddr, regAddr, 1, data, timeout);
+int8_t LWB_I2C_ReadByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint16_t timeout) {
+	return LWB_I2C_ReadBytes(devAddr, regAddr, 1, data, timeout);
 }
 
 
@@ -124,7 +121,7 @@ int8_t WB_I2C_ReadByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint16_t
  * @param data New byte value to write
  * @return Status of operation (true = success)
  */
-bool WB_I2C_WriteByte(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint16_t timeout) {
+bool LWB_I2C_WriteByte(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint16_t timeout) {
 
   I2C_TransferSeq_TypeDef seq;
 
@@ -149,3 +146,4 @@ bool WB_I2C_WriteByte(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint16_t t
 
 }
 
+#endif /* LWB_PLATFORM_EFM32G */

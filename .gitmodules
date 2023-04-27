@@ -1,0 +1,3 @@
+[submodule "firmware/src/libwindbird/3rd/microrl"]
+	path = firmware/src/libwindbird/3rd/microrl
+	url = https://github.com/windbird-sensor/microrl.git

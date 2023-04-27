@@ -1,5 +1,5 @@
 /**************************************************************************
- * @file WB_gps.c
+ * @file LWB_gps.c
  * @brief GPS API for WINDBIRD's firmware
   * @author Nicolas BALDECK
  ******************************************************************************
@@ -14,41 +14,42 @@
  * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
- 
-#include <efm32.h>
-#include <em_gpio.h>
-#include <td_core.h>
-#include <td_uart.h>
-#include <td_utils.h>
-#include <td_scheduler.h>
-#include <td_watchdog.h>
 
-#include "wb_gps.h"
-#include "wb_debug.h"
-#include "wb_sigfox.h"
+//#include <efm32.h>
+//#include <em_gpio.h>
+//#include <td_core.h>
+//#include <td_utils.h>
 
-#define GPS_POWER_PORT gpioPortC
-#define GPS_POWER_BIT 1
+#include "../libwindbird.h"
+#include "../../wb_config.h"
 
-#define BUFFER_SIZE 255
+#include "lwb_gps.h"
+#include "../core/lwb_utils.h"
+#include "../core/lwb_serial.h"
+
+#ifdef LWB_PLATFORM_EFM32G
+	#include <em_gpio.h>
+#else
+	#error "Not implemented for this platform"
+#endif
 
 #define FIXES_SIZE 5
 
-static char nmeaBuffer[BUFFER_SIZE];
+static char nmeaBuffer[GPS_BUFFER_SIZE];
 static uint16_t nmeaBufferIndex;
 
-static uint8_t timeoutAlarm;
-static volatile bool hasTimedOutEvent;
+static uint32_t timeout;
 
 static uint8_t fixesCount;
-static WB_GPS_Fix_t fixes[FIXES_SIZE];
+static LWB_GPS_Fix_t fixes[FIXES_SIZE];
+
 
 static bool gpsIsEnabled;
 
-static void TimeoutTimer(uint32_t arg, uint8_t repetition) {
+/* static void TimeoutTimer(uint32_t arg, uint8_t repetition) {
 	hasTimedOutEvent = true;
-	WB_DEBUG("GPS TIMEOUT IRQ...");
-}
+	LWB_SERIAL_Debug("GPS TIMEOUT IRQ...");
+} */
 
 static int hexToInt(char s[]) {
   //strtol is not available (because using td_utils.h instead of stdlib.h)
@@ -92,13 +93,13 @@ static uint8_t GetFixQuality() {
 		}
 		quality = (quality*10)/FIXES_SIZE/10;
 	}
-	WB_DEBUG("Fix quality %d\n", quality);
+	LWB_SERIAL_Debug("Fix quality %d\r\n", quality);
 	return quality;
 }
 
 static void ParseNMEA_ExtractWord(char* nmea, uint16_t *nmeaPos, char* buffer) {
 	uint16_t bufferPos = 0;
-	while (*nmeaPos < BUFFER_SIZE) {
+	while (*nmeaPos < GPS_BUFFER_SIZE) {
 		char c = nmea[*nmeaPos];
 		*nmeaPos += 1;
 		if (c == ',' || c == '*') {
@@ -109,7 +110,7 @@ static void ParseNMEA_ExtractWord(char* nmea, uint16_t *nmeaPos, char* buffer) {
 		bufferPos++;
 	}
 
-	//WB_DEBUG("--%s--\n", buffer);
+	//LWB_SERIAL_Debug("--%s--\r\n", buffer);
 }
 
 static int32_t ParseNMEA_ExtractLatitude(char* nmea, uint16_t *nmeaPos, char* buffer) {
@@ -188,7 +189,7 @@ static bool ParseNMEA_ExtractChecksum(char* nmea, uint16_t *nmeaPos, char* buffe
 	for (i=0; i<checksumLen; i++) {
 		checksum ^= nmea[i];
 	}
-	//WB_DEBUG("checksum %d %d\n", checksumExpected, checksum);
+	//LWB_SERIAL_Debug("checksum %d %d\r\n", checksumExpected, checksum);
 	return checksum == checksumExpected;
 }
 
@@ -207,7 +208,7 @@ static uint16_t ParseNMEA_ExtractHDOP(char* nmea, uint16_t *nmeaPos, char* buffe
 	// >20 Poor
 
 	ParseNMEA_ExtractWord(nmea, &*nmeaPos, buffer);
-	return (atolli(buffer, '.')+50)/100;
+	return (LWB_Utils_atolli(buffer, '.')+50)/100;
 }
 
 static uint16_t ParseNMEA_ExtractAltitude(char* nmea, uint16_t *nmeaPos, char* buffer) {
@@ -230,10 +231,10 @@ static bool ParseNMEA(char* nmea) {
 	if (strncmp(nmea, "GPGGA,", 6) != 0) return false;
 	//only listen for GPGGA messages
 
-	char buffer[BUFFER_SIZE];
+	char buffer[GPS_BUFFER_SIZE];
 	uint16_t nmeaPos=6;
 
-	WB_GPS_Fix_t fix;
+	LWB_GPS_Fix_t fix;
 
 	ParseNMEA_ExtractWord(nmea, &nmeaPos, buffer); // time
 	fix.latitude = ParseNMEA_ExtractLatitude(nmea, &nmeaPos, buffer); //latitude
@@ -249,16 +250,16 @@ static bool ParseNMEA(char* nmea) {
 	bool isChecksumValid = ParseNMEA_ExtractChecksum(nmea, &nmeaPos, buffer);
 	//isChecksumValid = true;
 
-	WB_DEBUG("%s\n", nmea);
-	WB_DEBUG("Lat: %d Lon: %d Alti: %d HDOP: %d\n", fix.latitude, fix.longitude, fix.altitude, fix.hdop);
+	LWB_SERIAL_Debug("%s\r\n", nmea);
+	LWB_SERIAL_Debug("Lat: %d Lon: %d Alti: %d HDOP: %d\r\n", fix.latitude, fix.longitude, fix.altitude, fix.hdop);
 
 	if (isFixValid && isChecksumValid) {
-		WB_DEBUG("Valid Fix\n", isFixValid, isChecksumValid);
+		LWB_SERIAL_Debug("Valid Fix\r\n", isFixValid, isChecksumValid);
 		fixesCount++;
 		fixes[fixesCount % FIXES_SIZE]=fix;
 		return true;
 	} else {
-		WB_DEBUG("Invalid Fix %d %d\n", isFixValid, isChecksumValid);
+		LWB_SERIAL_Debug("Invalid Fix %d %d\r\n", isFixValid, isChecksumValid);
 		return false;
 	}
 
@@ -266,21 +267,21 @@ static bool ParseNMEA(char* nmea) {
 }
 
 static bool ListenNMEA() {
-	//WB_DEBUG("WB_GPS_ProcessNMEA : %d\n", TD_UART_AvailableChars());
+	//LWB_SERIAL_Debug("LWB_GPS_ProcessNMEA : %d\r\n", TD_UART_AvailableChars());
 
 	int c;
-	while ((c = TD_UART_GetChar()) >= 0) {
+	while ((c = LWB_SERIAL_GetChar()) >= 0) {
 		if (c == '$') {
 			nmeaBufferIndex = 0;
-			memset(nmeaBuffer, 0, BUFFER_SIZE);
-		} else if (c == '\n') {
-			//WB_DEBUG("%s\n", NMEABuffer);
+			memset(nmeaBuffer, 0, GPS_BUFFER_SIZE);
+		} else if (c == '\r\n') {
+			//WB_DEBUG("%s\r\n", NMEABuffer);
 			return ParseNMEA(nmeaBuffer);
-		} else if (nmeaBufferIndex < BUFFER_SIZE) {
+		} else if (nmeaBufferIndex < GPS_BUFFER_SIZE) {
 			nmeaBuffer[nmeaBufferIndex] = c;
 			nmeaBufferIndex++;
 		} else {
-			WB_DEBUG("NMEA buffer overflow\n");
+			LWB_SERIAL_Debug("NMEA buffer overflow\r\n");
 		}
 	}
 
@@ -288,66 +289,69 @@ static bool ListenNMEA() {
 }
 
 
-void WB_GPS_Init() {
+void LWB_GPS_Init() {
 
 	// the serial port should already be initialized in the main program.
 
 	// GPS is turned off at startup
-	GPIO_PinModeSet(GPS_POWER_PORT, GPS_POWER_BIT, gpioModePushPull, 0);
+
+	#ifdef LWB_PLATFORM_EFM32G
+		GPIO_PinModeSet(GPS_POWER_PORT, GPS_POWER_BIT, gpioModePushPull, 0);
+	#endif
 
 	gpsIsEnabled = false;
-	timeoutAlarm = 0xFF;
 
 }
 
-void WB_GPS_PowerOn(uint16_t timeout) {
-	WB_DEBUG("POWER ON GPS...");
+void LWB_GPS_PowerOn(uint32_t timeoutAt) {
+	LWB_SERIAL_Debug("POWER ON GPS...");
 
-	GPIO_PinOutSet(GPS_POWER_PORT, GPS_POWER_BIT);
+	#ifdef LWB_PLATFORM_EFM32G
+		GPIO_PinOutSet(GPS_POWER_PORT, GPS_POWER_BIT);
+	#endif
 	gpsIsEnabled = true;
 	fixesCount = 0;
-	WB_DEBUG("OK\n");
+	LWB_SERIAL_Debug("OK\r\n");
 
-	if (timeoutAlarm != 0xFF) {
-		TD_SCHEDULER_Remove(timeoutAlarm);
-	}
+
+	/*timeout = LWB_SCHEDULER_Millis() + timeoutSeconds * 1000;
+	//
+
 	timeoutAlarm = TD_SCHEDULER_AppendIrq(timeout, 0 , 0, 1, TimeoutTimer, 0);
-	if (timeoutAlarm == 0xFF) WB_DEBUG("ERROR initializing GPS timeoutAlarm\n");
-	hasTimedOutEvent = false;
+	if (timeoutAlarm == 0xFF) LWB_SERIAL_Debug("ERROR initializing GPS timeoutAlarm\r\n");
+	hasTimedOutEvent = false;*/
 
 	// clear UART buffer
-	TD_UART_Flush();
+	LWB_SERIAL_Flush();
 
 }
 
-void WB_GPS_PowerOff() {
-	WB_DEBUG("POWER OFF GPS...");
+void LWB_GPS_PowerOff() {
+	LWB_SERIAL_Debug("POWER OFF GPS...");
 
-	GPIO_PinOutClear(GPS_POWER_PORT, GPS_POWER_BIT);
+	#ifdef LWB_PLATFORM_EFM32G
+		GPIO_PinOutClear(GPS_POWER_PORT, GPS_POWER_BIT);
+	#endif
 	gpsIsEnabled = false;
 
-	if (timeoutAlarm != 0xFF) {
-		TD_SCHEDULER_Remove(timeoutAlarm);
-		timeoutAlarm = 0xFF;
-	}
-
-	WB_DEBUG("OK\n");
+	LWB_SERIAL_Debug("OK\r\n");
 
 	// clear UART buffer
-	TD_UART_Flush();
+	LWB_SERIAL_Flush();
 
 }
 
-bool WB_GPS_Locate() {
+bool LWB_GPS_Locate() {
 	if (!gpsIsEnabled) return true; // exit loop if gps is not enabled
-	TD_WATCHDOG_Feed();
-	if (hasTimedOutEvent || (ListenNMEA() && (GetFixQuality() < 3 || fixesCount > 10))) {
+	// TD_WATCHDOG_Feed();
+	if (/* hasTimedOutEvent || */ (ListenNMEA() && (GetFixQuality() < 3 || fixesCount > 10))) {
 		if (fixesCount < FIXES_SIZE) {
-			WB_DEBUG("GPS TIMED OUT %d %d\n", fixesCount, GetFixQuality());
-			WB_SIGFOX_LocationFailureMessage ();
+			LWB_SERIAL_Debug("GPS TIMED OUT %d %d\r\n", fixesCount, GetFixQuality());
+			//callbackError
+			//LWB_SIGFOX_LocationFailureMessage ();
 		} else {
-			WB_DEBUG("GPS SUCCESS %d %d\n", fixesCount, GetFixQuality());
-			WB_GPS_Fix_t fix;
+			LWB_SERIAL_Debug("GPS SUCCESS %d %d\r\n", fixesCount, GetFixQuality());
+			LWB_GPS_Fix_t fix;
 			memset(&fix, 0, sizeof(fix));
 			uint16_t hdopAvg = 0; // needs 16 bits
 			uint32_t altitudeAvg = 0; // needs 32 bits
@@ -363,9 +367,11 @@ bool WB_GPS_Locate() {
 			fix.altitude = (int32_t)(altitudeAvg / FIXES_SIZE);
 			fix.hdop = (uint16_t)(hdopAvg / FIXES_SIZE);
 
-			WB_DEBUG("%d\t%d\t%d\t%d\n", fix.latitude, fix.longitude, fix.altitude, fix.hdop);
+			LWB_SERIAL_Debug("%d\t%d\t%d\t%d\r\n", fix.latitude, fix.longitude, fix.altitude, fix.hdop);
 
-			WB_SIGFOX_LocationMessage(fix);
+			// callbackSuccess
+
+			//WB_SIGFOX_LocationMessage(fix);
 		}
 		return true;
 	}

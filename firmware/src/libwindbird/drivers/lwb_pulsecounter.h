@@ -1,6 +1,6 @@
 /**************************************************************************
- * @file debug.h
- * @brief Debug functions for WINDBIRD's firmware
+ * @file WB_propeller.h
+ * @brief Propeller Sensor API for WINDBIRD's firmware
  * @author Nicolas BALDECK
  ******************************************************************************
  * @section License
@@ -14,16 +14,13 @@
  * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
-#ifndef WB_DEBUG_H_
-#define WB_DEBUG_H_
+#ifndef LWB_PULSECOUNTER_H_
+#define LWB_PULSECOUNTER_H_
 
-#ifdef DEBUG_WINDBIRD
-#include <td_printf.h>
-#define WB_DEBUG(...) tfp_printf(__VA_ARGS__)
-#define WB_DEBUG_DUMP(...) tfp_dump(__VA_ARGS__)
-#else
-#define WB_DEBUG(...)
-#define WB_DEBUG_DUMP(...)
-#endif
+void LWB_PULSECOUNTER_Init();
+uint8_t LWB_PULSECOUNTER_SampleRaw();
+void LWB_PULSECOUNTER_Reset();
+void LWB_PULSECOUNTER_Sample();
+uint16_t LWB_PULSECOUNTER_GetLastSamples(int count);
 
-#endif /* WB_DEBUG_H_ */
+#endif /* WB_PROPELLER_H_ */
