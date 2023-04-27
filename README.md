@@ -1,6 +1,7 @@
-# windbird-firmware
-Source files for the Windbird Firmware
+# windbird-fox-firmware
+Source files for the Windbird Fox Firmware
 
+# TOTAL REWRITE IN PROGRESS
 
 
 ## License
