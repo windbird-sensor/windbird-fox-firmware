@@ -52,80 +52,11 @@
 
 #include <td_config.h>
 
-static void Shutdown(bool earlyShutdown) {
 
-	// shutdown is engaged
-	WB_DEBUG("turn off\n");
 
-	if (!earlyShutdown) {
-	  WB_REPORTS_Stop();
-	  WB_GPS_PowerOff();
-	}
 
-	int i;
-	for (i=0; i<5; i++) {
-		WB_LED_Clear();
-		TD_RTC_Delay(TMS(200));
-		WB_LED_Set();
-		TD_RTC_Delay(TMS(200));
-	}
 
-	uint32_t batteryVoltageWithLedOn = WB_POWER_GetBatteryMillivolts();
-	WB_DEBUG("batteryVoltageWithLedOn: %d\n", batteryVoltageWithLedOn);
-	WB_LED_Fade(WB_LED_FADE_OUT, 1500);
 
-	if (!earlyShutdown) WB_SIGFOX_ShutdownMessage(batteryVoltageWithLedOn);
-
-	WB_POWER_DisableVAUX();
-
-	EMU_EnterEM3(true);
-	// ACTUAL "SHUTDOWN" is HERE
-	// the system will wake next time we press the button
-
-	WB_LED_Fade(WB_LED_FADE_IN, 1500); // user feedback
-	WB_LED_Set();
-	TD_RTC_Delay(TMS(2000));
-
-	NVIC_SystemReset(); // so we start fresh
-}
-
-static void Calibration() {
-	WB_LED_StartBlink(0, TMS(100));
-
-	WB_GPS_PowerOff();
-	WB_REPORTS_Stop();
-
-	TD_RTC_Delay(TMS(5000));
-
-	WB_LED_StopBlink();
-	WB_LED_Set();
-
-	TD_RTC_Delay(TMS(1000));
-	WB_COMPASS_Calibrate();
-	WB_LED_Clear();
-
-	WB_COMPASS_SaveCalibration();
-
-	//WB_COMPASS_TestCalibration();
-
-	WB_REPORTS_Start();
-}
-
-static void ButtonLoop() {
-	switch (WB_BUTTON_Loop()) {
-		case WB_BUTTON_NO_ACTION:
-			//WB_DEBUG("button no action\n");
-			break;
-		case WB_BUTTON_PRESSED_POWER_SWITCH:
-			WB_DEBUG("button power switch\n");
-			Shutdown(false);
-			break;
-		case WB_BUTTON_PRESSED_CALIBRATION:
-			WB_DEBUG("button calibration\n");
-			Calibration();
-			break;
-	}
-}
 
 void TD_USER_Setup(void) {
 

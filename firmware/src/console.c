@@ -47,26 +47,28 @@ static int Adc(int argc, const char * const * argv) {
 		LWB_SERIAL_Printfln("%s : Unknown option", argv[1]);
 		return 1;
 	}
-	LWB_SERIAL_Printfln("%s : %d", argv[1], val);
+	LWB_SERIAL_Printfln("%d", val);
 	return 0;
 }
 
 static int Button(int argc, const char * const * argv) {
 	LWB_SERIAL_Println("Waiting for button press.");
-	LWB_SERIAL_Println("Enter [q] to stop");
 	do {
 		switch (LWB_BUTTON_Process()) {
 			case LWB_BUTTON_NO_ACTION:
+				LWB_SERIAL_Println(".");
+				TD_RTC_Delay(T250MS);
 				break;
 			case LWB_BUTTON_PRESSED_POWER_SWITCH:
 				LWB_SERIAL_Println("Button pressed : power");
+				return 0;
 				break;
 			case LWB_BUTTON_PRESSED_CALIBRATION:
 				LWB_SERIAL_Println("Button pressed : calibration");
+				return 0;
 				break;
 		}
 	} while (LWB_CONSOLE_LoopUntilQuit(true));
-	return 0;
 }
 
 static int Gps(int argc, const char * const * argv) {
@@ -138,14 +140,8 @@ static int Imu(int argc, const char * const * argv) {
 		LWB_LED_Set();
 		success = LWB_COMPASS_Calibrate();
 		LWB_LED_Clear();
-	} else if (strcmp(argv[1], "selftest") == 0) {
-		LWB_SERIAL_Println("Running compass selftest");
-		if (!LWB_COMPASS_Test()) {
-			LWB_SERIAL_Println("Compass selftest FAILED");
-			success = false;
-		} else {
-			LWB_SERIAL_Println("Compass selftest OK");
-		}
+	} else if (strcmp(argv[1], "test") == 0) {
+		success = LWB_COMPASS_Test();
 	}
 	return success ? 0 : 1;
 }
@@ -218,7 +214,7 @@ static int Sigfox(int argc, const char * const * argv) {
 	int success = true;
 	char message[12] = "0123456789AB";
 	if (strcmp(argv[1], "id") == 0) {
-		LWB_SERIAL_Printfln("SIGFOX ID: %X", TD_SIGFOX_GetId());
+		LWB_SERIAL_Printfln("%X", TD_SIGFOX_GetId());
 	} else if (strcmp(argv[1], "uplink") == 0) {
 		LWB_SERIAL_Println("Sending message...");
 		success = TD_SIGFOX_SendV1(MODE_FRAME, false, (uint8_t *)message, 12, 2, false, false);
@@ -263,22 +259,26 @@ static int Sigfox(int argc, const char * const * argv) {
 static int Speed(int argc, const char * const * argv) {
 	LWB_CONSOLE_CHECKARGC(argc, 1);
 	bool success = true;
-	LWB_SERIAL_Println("Reading speed, 1Hz sampling rate.");
-	LWB_SERIAL_Println("Enter [q] to stop");
-	LWB_SERIAL_Println("Hz\tkm/h");
+	int pulses;
 	if (strcmp(argv[1], "read") == 0) {
+		LWB_SERIAL_Println("Reading speed, 1Hz sampling rate.");
+		LWB_SERIAL_Println("Enter [q] to stop");
+		LWB_SERIAL_Println("Hz\tkm/h");
 		LWB_PULSECOUNTER_Reset();
-		int pulses;
 		do {
 			TD_RTC_Delay(T1S);
 			pulses = LWB_PULSECOUNTER_SampleRaw();
 			LWB_SERIAL_Printfln("%d\t%d", pulses, (int)(float)(pulses * SPEED_HZ_TO_KMH));
-
 		} while (LWB_CONSOLE_LoopUntilQuit(false));
 	} else if (strcmp(argv[1], "showcal") == 0) {
 		LWB_SERIAL_Println("todo");
 	} else if (strcmp(argv[1], "setcal") == 0) {
 		LWB_SERIAL_Println("todo");
+	} else if (strcmp(argv[1], "test") == 0) {
+		LWB_PULSECOUNTER_Reset();
+		TD_RTC_Delay(T1S);
+		pulses = LWB_PULSECOUNTER_SampleRaw();
+		LWB_SERIAL_Printfln("%d", pulses);
 	} else {
 		LWB_SERIAL_Printfln("%s : Unknown option", argv[1]);
 		success = false;
@@ -292,12 +292,12 @@ LWB_CONSOLE_command_t LWB_CONSOLE_commands[] = {
 		{"exit", &LWB_CONSOLE_ExitCmd, ""},
 		{"gps", &Gps, ""},
 		{"help", &LWB_CONSOLE_HelpCmd, ""},
-		{"imu", &Imu, "[ read | showcal | setcal | calibrate | selftest ]"},
+		{"imu", &Imu, "[ read | showcal | setcal | calibrate | test ]"},
 		{"led", &Led, "[ on | off ]"},
 		{"mfg", &SetMfgData, "**reserved**"},
 		{"mode", &Todo, "[ windbird | wmo ]"},
 		{"sigfox", &Sigfox, "[ id | uplink | downlink | showpwr | setpwr | cw ]"},
-		{"speed", &Speed, "[ read | showcal | setcal ]"}
+		{"speed", &Speed, "[ read | showcal | setcal | test ]"}
 };
 
 int LWB_CONSOLE_commandsCount = sizeof( LWB_CONSOLE_commands ) / sizeof( LWB_CONSOLE_command_t );

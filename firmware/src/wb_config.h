@@ -25,7 +25,7 @@
 #define SPEED_HZ_TO_KMH 0.735 // wind tunnel calibration
 
 #define DEBUG_WINDBIRD
-// #define DEBUG_FORCE_CONSOLE
+#define DEBUG_FORCE_CONSOLE
 
 #define COMPASS_XSCALE_DEFAULT 1.
 #define COMPASS_YSCALE_DEFAULT 1.
@@ -33,6 +33,13 @@
 #define COMPASS_XOFFSET_DEFAULT 0.
 #define COMPASS_YOFFSET_DEFAULT 0.
 #define COMPASS_ZOFFSET_DEFAULT 0.
+
+#define CONSOLE_STARTUP_SECONDS 4
+
+#define RUNMODE_NORMAL 0
+#define RUNMODE_CALIBRATION 1
+#define RUNMODE_TRACKING 2
+
 
 // ---------- SETTINGS ----------------
 
@@ -49,6 +56,7 @@
 #define SETTING_COMPASS_XOFFSET 13
 #define SETTING_COMPASS_YOFFSET 14
 #define SETTING_COMPASS_ZOFFSET 15
+#define SETTING_RUNMODE 16
 // max 127
 
 // -----------  PINOUT -----------------
