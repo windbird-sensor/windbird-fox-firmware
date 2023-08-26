@@ -1,0 +1,24 @@
+// tracking mode
+
+void WB_TRACKING_Start() {
+	LWB_SIGFOX_Send(WB_MSG_TRACKING_STOP);
+	NVIC_SystemReset();
+	LWB_SETTINGS_Save()
+}
+
+void WB_TRACKING_InfiniteLoop() {
+	NVIC_
+}
+
+void WB_TRACKING_Stop() {
+	LWB_SIGFOX_Send(WB_MSG_TRACKING_STOP);
+	NVIC_SystemReset();
+}
+
+void WB_TRACKING_Loop() {
+	LWB_SIGFOX_Send(WB_MSG_TRACKING_STOP);
+}
+
+void WB_TRACKING_Renew() {
+	LWB_SIGFOX_Send(WB_MSG_TRACKING_RENEW);
+}
