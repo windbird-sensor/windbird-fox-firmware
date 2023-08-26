@@ -25,9 +25,9 @@
 #include "wb_propeller.h"
 #include "wb_sigfox.h"
 
-#define SAMPLE_PERIOD 2
-#define SAMPLE_PER_REPORT 120
-#define REPORT_COUNT 3
+#define SAMPLE_PERIOD 3
+#define SAMPLE_PER_REPORT 100
+#define REPORT_COUNT 2
 
 static bool isPaused;
 

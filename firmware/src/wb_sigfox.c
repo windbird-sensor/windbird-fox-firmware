@@ -169,22 +169,18 @@ void WB_SIGFOX_ReportMessage(WB_REPORTS_Report_t *report, uint8_t reportCount) {
     speedAvg[i] = EncodeWindSpeed(report[i].speedAvg);
     tempAvg += report[i].tempAvg;
   }
-  tempAvg /= 3;
+  tempAvg /= reportCount;
 
   message[0] = speedMin[0];
   message[1] = speedMin[1];
-  message[2] = speedMin[2];
-  message[3] = speedAvg[0];
-  message[4] = speedAvg[1];
-  message[5] = speedAvg[2];
-  message[6] = speedMax[0];
-  message[7] = speedMax[1];
-  message[8] = speedMax[2];
-  message[9] = (headingAvg[0] << 4) | headingAvg[1];
-  message[10] = (headingAvg[2] << 4);
-  message[11] = EncodeTemperature(tempAvg);
+  message[2] = speedAvg[0];
+  message[3] = speedAvg[1];
+  message[4] = speedMax[0];
+  message[5] = speedMax[1];
+  message[6] = (headingAvg[0] << 4) | headingAvg[1];
+  message[7] = EncodeTemperature(tempAvg);
 
-  SIGFOX_SEND(message, 12);
+  SIGFOX_SEND(message, 8);
 }
 
 void WB_SIGFOX_MonitoringMessage(float tempMin, float tempAvg, float tempMax, float voltageMin, float voltageAvg, float voltageMax) {
