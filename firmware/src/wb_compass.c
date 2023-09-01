@@ -239,7 +239,7 @@ bool WB_COMPASS_GetRaw(int *x, int *y, int *z) {
 
 		uint8_t statusReg;
 		int retry;
-		for (retry=5; retry<0; retry--) {
+		for (retry=5; retry>0; retry--) {
 			TD_RTC_Delay(TMS(5));
 			if (!READBYTE(MC6470_STATUS_REG, &statusReg)) {
 				WB_DEBUG("can't read MC6470_STATUS_REG\n");
@@ -257,7 +257,7 @@ bool WB_COMPASS_GetRaw(int *x, int *y, int *z) {
 
 		// Read measurements
 
-		int16_t measurementsBuffer[6];
+		int16_t measurementsBuffer[3];
 
 		if (READBYTES(MC6470_OUTPUT_X_LSB_REG, 6, measurementsBuffer) != 6) {
 			WB_DEBUG("Can't read results");
