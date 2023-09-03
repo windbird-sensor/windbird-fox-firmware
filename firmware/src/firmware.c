@@ -53,6 +53,12 @@
 
 #include <td_config.h>
 
+static void StartupLed() {
+	WB_LED_Fade(WB_LED_FADE_IN, 1500); // user feedback
+	WB_LED_Set();
+	TD_RTC_Delay(TMS(2000));
+}
+
 static void Shutdown(bool earlyShutdown) {
 
 	// shutdown is engaged
@@ -83,33 +89,66 @@ static void Shutdown(bool earlyShutdown) {
 	// ACTUAL "SHUTDOWN" is HERE
 	// the system will wake next time we press the button
 
-	WB_LED_Fade(WB_LED_FADE_IN, 1500); // user feedback
-	WB_LED_Set();
-	TD_RTC_Delay(TMS(2000));
+	StartupLed();
 
 	NVIC_SystemReset(); // so we start fresh
 }
 
 static void Calibration() {
-	WB_LED_StartBlink(0, TMS(100));
+	int i;
+	for (i=0; i<20; i++) {
+		WB_LED_Set();
+		TD_RTC_Delay(TMS(100));
+		WB_LED_Clear();
+		TD_RTC_Delay(TMS(100));
+	}
+	WB_LED_Set();
 
 	WB_GPS_PowerOff();
 	WB_REPORTS_Stop();
 
-	TD_RTC_Delay(TMS(5000));
+	// TD_RTC_Delay(TMS(5000));
 
-	WB_LED_StopBlink();
-	WB_LED_Set();
+	WB_COMPASS_CALIBRATION_Begin();
 
-	TD_RTC_Delay(TMS(1000));
-	WB_COMPASS_Calibrate();
+	float sample[3];
+	bool sampling = true;
+	while (sampling) {
+		WB_COMPASS_GetRaw(&sample[0], &sample[1], &sample[2]);
+		//TD_WATCHDOG_Feed();
+		switch (WB_COMPASS_CALIBRATION_AddSample(sample)) {
+			case WB_COMPASS_CALIBRATION_AQUISITION_COMPLETE:
+				sampling = false;
+				break;
+			case WB_COMPASS_CALIBRATION_SAMPLE_OK:
+				WB_LED_Clear();
+				break;
+			case WB_COMPASS_CALIBRATION_SAMPLE_DISCARD:
+				// no nothing
+				break;
+		}
+
+		TD_RTC_Delay(TMS(100));
+		WB_LED_Set();
+		//TD_RTC_Delay(TMS(50));
+	};
+
+	WB_COMPASS_CALIBRATION_End();
+
 	WB_LED_Clear();
+	TD_RTC_Delay(TMS(1000));
+	for (i=0; i<5; i++) {
+		WB_LED_Set();
+		TD_RTC_Delay(TMS(100));
+		WB_LED_Clear();
+		TD_RTC_Delay(TMS(100));
+	}
 
-	WB_COMPASS_SaveCalibration();
+	TD_RTC_Delay(TMS(2000));
 
-	//WB_COMPASS_TestCalibration();
+	StartupLed();
 
-	WB_REPORTS_Start();
+	NVIC_SystemReset();
 }
 
 static void ButtonLoop() {

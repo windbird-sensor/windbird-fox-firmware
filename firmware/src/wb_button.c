@@ -66,12 +66,13 @@ WB_BUTTON_State_t WB_BUTTON_Loop() {
 	uint32_t duration = 0;
 
 	while ((GPIO_PinInGet(BUTTON_PORT, BUTTON_BIT) == 0) && (duration < DELAY_CALIBRATION)) {
-		duration++;
+		#ifdef DEBUG
+			duration += 5;
+		#else
+			duration++;
+		#endif
 	}
 
-#ifdef DEBUG
-	duration *= 5;
-#endif
 
 	if (duration > 0) {
 

@@ -1,0 +1,23 @@
+/*
+ * wb_compass_calibration.h
+ *
+ *  Created on: 2 Sep 2023
+ *      Author: windbird-dev
+ */
+
+#ifndef WB_COMPASS_CALIBRATION_H_
+#define WB_COMPASS_CALIBRATION_H_
+
+typedef enum {
+	WB_COMPASS_CALIBRATION_SAMPLE_OK,
+	WB_COMPASS_CALIBRATION_SAMPLE_DISCARD,
+	WB_COMPASS_CALIBRATION_AQUISITION_COMPLETE,
+}  WB_COMPASS_CALIBRATION_Result_t;
+
+void WB_COMPASS_CALIBRATION_Init();
+void WB_COMPASS_CALIBRATION_Transform(float *x, float *y, float *z);
+void WB_COMPASS_CALIBRATION_Begin();
+WB_COMPASS_CALIBRATION_Result_t WB_COMPASS_CALIBRATION_AddSample(float newSample[3]);
+void WB_COMPASS_CALIBRATION_End();
+
+#endif /* WB_COMPASS_CALIBRATION_H_ */
