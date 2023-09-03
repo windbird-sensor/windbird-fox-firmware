@@ -34,9 +34,13 @@
 
 static float calSamples[N_ACQ_SAMPLES * N_ACQ_REPEAT][3];
 static int calSamplesCount = 0;
-static float calMatrix[3][3];
-static float calOffset[3];
-static float calRadius;
+static float calMatrix[3][3] = {
+	{0.925, -0.010, -0.020},
+	{-0.010, 0.951, -0.002},
+	{-0.020, -0.002, 0.909}
+};
+static float calOffset[3] = { 0.179, -0.296, -4.786 };
+static float calRadius = 271.;
 
 
 void estimateCenter3D(float samples[][3], int nSamples, float center[3], float *radius) {
@@ -354,36 +358,20 @@ float distanceToSamples(float newSample[3]) {
 }
 
 void WB_COMPASS_CALIBRATION_Init() {
-	if (!TD_FLASH_DeclareVariable((uint8_t *) calMatrix, sizeof(float)*3*3, 0)) {
+	if (!TD_FLASH_DeclareVariable((uint8_t *) &calMatrix[0][0], sizeof(float)*3*3, 0)) {
 		WB_DEBUG("No calMatrix in Flash. Using default\n");
-		calMatrix[0][0] = 0.925;
-		calMatrix[0][1] = -0.010;
-		calMatrix[0][2] = -0.020;
-		calMatrix[1][0] = -0.010;
-		calMatrix[1][1] = 0.951;
-		calMatrix[1][2] = -0.002;
-		calMatrix[2][0] = -0.020;
-		calMatrix[2][1] = -0.002;
-		calMatrix[2][2] = 0.909;
-	} else {
-		printNxN("Using calMatrix from Flash", &calMatrix[0][0], 3, 3);
 	}
+	printNxN("calMatrix", &calMatrix[0][0], 3, 3);
 
-	if (!TD_FLASH_DeclareVariable((uint8_t *) calOffset, sizeof(float)*3, 0)) {
+	if (!TD_FLASH_DeclareVariable((uint8_t *) &calOffset[0], sizeof(float)*3, 0)) {
 		WB_DEBUG("No calOffset in Flash. Using default\n");
-		calOffset[0] = 179;
-		calOffset[1] = -296;
-		calOffset[2] = -4786;
-	} else {
-		printNxN("Using calOffset from Flash", calOffset, 3, 1);
 	}
+	printNxN("calOffset", calOffset, 3, 1);
 
 	if (!TD_FLASH_DeclareVariable((uint8_t *) &calRadius, sizeof(float), 0)) {
 		WB_DEBUG("No calRadius in Flash. Using default\n");
-		calRadius = 271;
-	} else {
-		WB_DEBUG("Using calRadius from Flash: %d\n", (int)calRadius);
 	}
+	WB_DEBUG("calRadius: %d\n", (int)calRadius);
 }
 
 void WB_COMPASS_CALIBRATION_Transform(float *x, float *y, float *z) {
