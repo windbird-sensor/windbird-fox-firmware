@@ -31,13 +31,12 @@
 #include "wb_gps.h"
 #include "wb_i2c.h"
 #include "wb_compass.h"
+#include "wb_compass_calibration.h"
 #include "wb_sigfox.h"
 #include "wb_propeller.h"
 #include "wb_reports.h"
 #include "wb_monitoring.h"
 #include "wb_power.h"
-
-
 
 #define MODULE_REVISION REVISION_TD1208
 #define PRODUCT_LED_PORT LED_PORT
