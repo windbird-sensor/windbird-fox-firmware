@@ -14,7 +14,7 @@
  * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
- 
+
 #include <em_gpio.h>
 #include <td_core.h>
 
@@ -66,11 +66,7 @@ WB_BUTTON_State_t WB_BUTTON_Loop() {
 	uint32_t duration = 0;
 
 	while ((GPIO_PinInGet(BUTTON_PORT, BUTTON_BIT) == 0) && (duration < DELAY_CALIBRATION)) {
-		#ifdef DEBUG
-			duration += 5;
-		#else
-			duration++;
-		#endif
+		duration++;
 	}
 
 

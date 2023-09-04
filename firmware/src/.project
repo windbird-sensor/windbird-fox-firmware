@@ -7,10 +7,7 @@
 		<project>emlib</project>
 		<project>libtdcore</project>
 		<project>libtddrivers</project>
-		<project>libtdgeoloc</project>
 		<project>libtdrf</project>
-		<project>libtdsensor</project>
-		<project>libtdtools</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
