@@ -14,14 +14,14 @@
  * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
- 
+
 #ifndef WB_BUTTON_H_
 #define WB_BUTTON_H_
 
 typedef enum {
 	WB_BUTTON_NO_ACTION,
 	WB_BUTTON_PRESSED_POWER_SWITCH,
-	WB_BUTTON_PRESSED_CALIBRATION,
+	WB_BUTTON_PRESSED_SETTINGS,
 	} WB_BUTTON_State_t;
 
 void WB_BUTTON_Init();

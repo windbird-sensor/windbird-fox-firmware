@@ -31,10 +31,14 @@
 
 #ifdef DEBUG_NO_SIGFOX
 #define SIGFOX_SEND(...) WB_DEBUG_DUMP("sigfox", __VA_ARGS__)
+#define SIGFOX_SEND_NO_RETRY(...) WB_DEBUG_DUMP("sigfox no retry= ", __VA_ARGS__)
 #else
 #define SIGFOX_SEND(...) \
   WB_DEBUG_DUMP("sigfox= ", __VA_ARGS__); \
   TD_SIGFOX_SendV1(MODE_FRAME, 0, __VA_ARGS__, SIGFOX_RETRIES, 0, 0)
+#define SIGFOX_SEND_NORETRY(...) \
+  WB_DEBUG_DUMP("sigfox no retry= ", __VA_ARGS__); \
+  TD_SIGFOX_SendV1(MODE_FRAME, 0, __VA_ARGS__, 0, 0, 0)
 #endif
 
 #define SIGFOX_STARTUP_MESSAGE 0x10
@@ -42,6 +46,7 @@
 #define SIGFOX_MONITORING_MESSAGE 0x30
 #define SIGFOX_CALIBRATION_MESSAGE_A 0x4A
 #define SIGFOX_CALIBRATION_MESSAGE_B 0x4B
+#define SIGFOX_SHORT_REPORT_MESSAGE 0x50
 #define SIGFOX_LOCATION_FAILURE_MESSAGE 0xF0
 #define SIGFOX_LOCATION_MESSAGE 0xFF
 
@@ -155,32 +160,47 @@ void WB_SIGFOX_LocationFailureMessage () {
 
 void WB_SIGFOX_ReportMessage(WB_REPORTS_Report_t *report, uint8_t reportCount) {
 
-  uint8_t headingAvg[reportCount];
-  uint8_t speedMax[reportCount];
-  uint8_t speedMin[reportCount];
-  uint8_t speedAvg[reportCount];
-  float tempAvg = 0;
+	uint8_t headingAvg[2];
+	uint8_t speedMax[2];
+	uint8_t speedMin[2];
+	uint8_t speedAvg[2];
+	float tempAvg = 0;
 
-  int i;
-  for (i=0; i<reportCount; i++) {
-    headingAvg[i] = EncodeWindHeading(report[i].headingAvg);
-    speedMax[i] = EncodeWindSpeed(report[i].speedMax);
-    speedMin[i] = EncodeWindSpeed(report[i].speedMin);
-    speedAvg[i] = EncodeWindSpeed(report[i].speedAvg);
-    tempAvg += report[i].tempAvg;
-  }
-  tempAvg /= reportCount;
+	if (reportCount == 2) {
+		int i;
+		for (i=0; i<reportCount; i++) {
+		headingAvg[i] = EncodeWindHeading(report[i].headingAvg);
+		speedMax[i] = EncodeWindSpeed(report[i].speedMax);
+		speedMin[i] = EncodeWindSpeed(report[i].speedMin);
+		speedAvg[i] = EncodeWindSpeed(report[i].speedAvg);
+		tempAvg += report[i].tempAvg;
+		}
+		tempAvg /= reportCount;
 
-  message[0] = speedMin[0];
-  message[1] = speedMin[1];
-  message[2] = speedAvg[0];
-  message[3] = speedAvg[1];
-  message[4] = speedMax[0];
-  message[5] = speedMax[1];
-  message[6] = (headingAvg[0] << 4) | headingAvg[1];
-  message[7] = EncodeTemperature(tempAvg);
+		message[0] = speedMin[0];
+		message[1] = speedMin[1];
+		message[2] = speedAvg[0];
+		message[3] = speedAvg[1];
+		message[4] = speedMax[0];
+		message[5] = speedMax[1];
+		message[6] = (headingAvg[0] << 4) | headingAvg[1];
+		message[7] = EncodeTemperature(tempAvg);
+		SIGFOX_SEND(message, 8);
+	} else {
+		headingAvg[0] = EncodeWindHeading(report[0].headingAvg);
+		speedMax[0] = EncodeWindSpeed(report[0].speedMax);
+		speedMin[0] = EncodeWindSpeed(report[0].speedMin);
+		speedAvg[0] = EncodeWindSpeed(report[0].speedAvg);
+		tempAvg = report[0].tempAvg;
 
-  SIGFOX_SEND(message, 8);
+		message[0] = SIGFOX_SHORT_REPORT_MESSAGE;
+		message[1] = speedMin[0];
+		message[2] = speedAvg[0];
+		message[3] = speedMax[0];
+		message[4] = headingAvg[1];
+		message[5] = EncodeTemperature(tempAvg);
+		SIGFOX_SEND_NORETRY(message, 6);
+	}
 }
 
 void WB_SIGFOX_MonitoringMessage(float tempMin, float tempAvg, float tempMax, float voltageMin, float voltageAvg, float voltageMax) {

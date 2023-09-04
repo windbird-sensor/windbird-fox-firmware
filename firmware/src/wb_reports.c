@@ -24,6 +24,7 @@
 #include "wb_compass.h"
 #include "wb_propeller.h"
 #include "wb_sigfox.h"
+#include "wb_runmode.h"
 
 #define SAMPLE_PERIOD 3
 #define SAMPLE_PER_REPORT 100
@@ -96,12 +97,23 @@ static void SamplingTimer(uint32_t argument, uint8_t repetition) {
 				(int)report[reportIndex].tempAvg,
 				reportIndex);
 
-		if (reportIndex == REPORT_COUNT-1) {
-			WB_SIGFOX_ReportMessage(report, REPORT_COUNT);
-			reportIndex=0;
-		} else {
-			reportIndex++;
+		switch (WB_RUNMODE_Get()) {
+			case MODE_SIGFOX_5M:
+				WB_SIGFOX_ReportMessage(report, 1);
+				break;
+			case MODE_SIGFOX_10M:
+				if (reportIndex == REPORT_COUNT-1) {
+					WB_SIGFOX_ReportMessage(report, REPORT_COUNT);
+					reportIndex=0;
+				} else {
+					reportIndex++;
+				}
+				break;
+			case MODE_OGN:
+				// todo
+				break;
 		}
+
 
 		ResetCurrent();
 	}

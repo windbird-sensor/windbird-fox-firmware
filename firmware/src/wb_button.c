@@ -28,7 +28,7 @@
 
 #define DELAY_DEBOUNCING 10000
 #define DELAY_TOO_LONG 2000000
-#define DELAY_CALIBRATION 9000000
+#define DELAY_SETTINGS 9000000
 
 static volatile bool buttonPressedEvent;
 
@@ -65,7 +65,7 @@ WB_BUTTON_State_t WB_BUTTON_Loop() {
 
 	uint32_t duration = 0;
 
-	while ((GPIO_PinInGet(BUTTON_PORT, BUTTON_BIT) == 0) && (duration < DELAY_CALIBRATION)) {
+	while ((GPIO_PinInGet(BUTTON_PORT, BUTTON_BIT) == 0) && (duration < DELAY_SETTINGS)) {
 		duration++;
 	}
 
@@ -74,8 +74,8 @@ WB_BUTTON_State_t WB_BUTTON_Loop() {
 
 		buttonPressedEvent = 0;
 
-		if (duration == DELAY_CALIBRATION) {
-			state = WB_BUTTON_PRESSED_CALIBRATION;
+		if (duration == DELAY_SETTINGS) {
+			state = WB_BUTTON_PRESSED_SETTINGS;
 		} else if (duration > DELAY_TOO_LONG) {
 			// nop
 		} else if (duration >= DELAY_DEBOUNCING) {

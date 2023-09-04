@@ -37,6 +37,7 @@
 #include "wb_reports.h"
 #include "wb_monitoring.h"
 #include "wb_power.h"
+#include "wb_runmode.h"
 
 #define MODULE_REVISION REVISION_TD1208
 #define PRODUCT_LED_PORT LED_PORT
@@ -94,19 +95,7 @@ static void Shutdown(bool earlyShutdown) {
 }
 
 static void Calibration() {
-	int i;
-	for (i=0; i<20; i++) {
-		WB_LED_Set();
-		TD_RTC_Delay(TMS(100));
-		WB_LED_Clear();
-		TD_RTC_Delay(TMS(100));
-	}
 	WB_LED_Set();
-
-	WB_GPS_PowerOff();
-	WB_REPORTS_Stop();
-
-	// TD_RTC_Delay(TMS(5000));
 
 	WB_COMPASS_CALIBRATION_Begin();
 
@@ -135,19 +124,38 @@ static void Calibration() {
 	WB_COMPASS_CALIBRATION_End();
 
 	WB_LED_Clear();
-	TD_RTC_Delay(TMS(1000));
-	for (i=0; i<5; i++) {
-		WB_LED_Set();
-		TD_RTC_Delay(TMS(100));
-		WB_LED_Clear();
-		TD_RTC_Delay(TMS(100));
-	}
+}
 
+static void SwitchMode() {
+	WB_LED_Set();
+	TD_RTC_Delay(TMS(250));
+	WB_LED_Clear();
 	TD_RTC_Delay(TMS(2000));
-
-	StartupLed();
-
-	NVIC_SystemReset();
+	int mode = WB_RUNMODE_Get();
+	mode = (mode + 1) % WB_RUNMODE_MAX_SWITCHABLE;
+	int nBlinks = 0;
+	switch(mode) {
+		case MODE_OGN:
+			nBlinks = 3;
+			break;
+		case MODE_SIGFOX_5M:
+			nBlinks = 5;
+			break;
+		case MODE_SIGFOX_10M:
+			nBlinks = 10;
+			break;
+		default:
+			WB_DEBUG("ERROR: unknown runmode %d\n", mode);
+			return;
+	}
+	WB_RUNMODE_Set(mode);
+	int i;
+	for (i=0; i<nBlinks; i++) {
+		WB_LED_Set();
+		TD_RTC_Delay(TMS(250));
+		WB_LED_Clear();
+		TD_RTC_Delay(TMS(250));
+	}
 }
 
 static void ButtonLoop() {
@@ -159,9 +167,33 @@ static void ButtonLoop() {
 			WB_DEBUG("button power switch\n");
 			Shutdown(false);
 			break;
-		case WB_BUTTON_PRESSED_CALIBRATION:
-			WB_DEBUG("button calibration\n");
-			Calibration();
+		case WB_BUTTON_PRESSED_SETTINGS:
+			WB_DEBUG("button settings 1\n");
+			WB_GPS_PowerOff();
+			WB_REPORTS_Stop();
+			int i;
+			for (i=0; i<10; i++) {
+				WB_LED_Set();
+				TD_RTC_Delay(TMS(100));
+				WB_LED_Clear();
+				TD_RTC_Delay(TMS(100));
+			}
+			if (WB_BUTTON_Loop() == WB_BUTTON_PRESSED_SETTINGS) {
+				// did we continue pressing for a second period?
+				WB_DEBUG("button settings 2\n");
+				WB_DEBUG("mode change\n");
+				SwitchMode();
+			} else {
+				// single period
+				WB_DEBUG("calibration\n");
+				Calibration();
+			}
+
+			TD_RTC_Delay(TMS(2000));
+
+			StartupLed();
+
+			NVIC_SystemReset();
 			break;
 	}
 }
@@ -180,6 +212,7 @@ void TD_USER_Setup(void) {
 	WB_POWER_Init();
 	WB_LED_Init();
 	WB_BUTTON_Init();
+	WB_RUNMODE_Init();
 
 	while (true) {
 		uint32_t vcap = WB_POWER_GetCapacitorMillivolts();
