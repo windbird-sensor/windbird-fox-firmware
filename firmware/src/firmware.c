@@ -272,15 +272,17 @@ void TD_USER_Setup(void) {
 
 	WB_SIGFOX_StartupMessage(windSpeed, windHeading, vbatNoLed, vbatLed, vcapEarlyBoot, vcapNow);
 
+	WB_LED_Clear();
+
 	//WB_GPS_PowerOn(30);
 	WB_GPS_PowerOn(180);
 	while (!WB_GPS_Locate()) {
-		WB_LED_Clear();
+		//WB_LED_Clear();
 		ButtonLoop();
 		TD_RTC_Sleep();
-		WB_LED_Set();
+		//WB_LED_Set();
 	}
-	WB_LED_Clear();
+	//WB_LED_Clear();
 	WB_GPS_PowerOff();
 	WB_REPORTS_Start();
 }
