@@ -14,7 +14,7 @@
  * https://github.com/windbird-sensor/windbird-firmware/blob/main/README.md
  *
  ******************************************************************************/
- 
+
 #ifndef WB_COMPASS_H_
 #define WB_COMPASS_H_
 
@@ -25,5 +25,6 @@ void WB_COMPASS_Init();
 bool WB_COMPASS_Test();
 bool WB_COMPASS_GetRaw(float *x, float *y, float *z);
 float WB_COMPASS_GetHeading();
+float WB_COMPASS_GetError();
 
 #endif /* WB_COMPASS_H_ */

@@ -22,17 +22,36 @@
 #include "wb_debug.h"
 #include "wb_reports.h"
 #include "wb_compass.h"
+#include "wb_accelero.h"
 #include "wb_propeller.h"
 #include "wb_sigfox.h"
 #include "wb_runmode.h"
 
 #define SAMPLE_PERIOD 3
+#define EXTENDED_SAMPLE_EVERY_N_SAMPLES 10
 #define SAMPLE_PER_REPORT 100
 #define REPORT_COUNT 2
 
 static bool isPaused;
 
 static WB_REPORTS_Report_t report[REPORT_COUNT];
+
+static WB_REPORTS_DiagReport_t diagReport = {
+	.accelXAvg = 0.,
+	.accelYAvg = 0.,
+	.accelZAvg = 0.,
+	.accelXSamplesCount = 0,
+	.accelYSamplesCount = 0,
+	.accelZSamplesCount = 0,
+	.headingErrorAvg = 0.,
+	.headingErrorSamplesCount = 0,
+	.headingErrorMax = -9999.,
+	.tempAvg = 0.,
+	.tempSamplesCount = 0,
+	.tempMin = 9999.,
+	.tempMax = -9999.
+};
+
 static uint8_t samplingTimer;
 static uint8_t reportIndex;
 
@@ -43,7 +62,6 @@ static void ResetCurrent() {
 	report[reportIndex].headingX = 0;
 	report[reportIndex].headingY = 0;
 	report[reportIndex].headingAvg = 0;
-	report[reportIndex].tempAvg = 0;
 	report[reportIndex].samplesCount = 0;
 }
 
@@ -69,15 +87,35 @@ static void SamplingTimer(uint32_t argument, uint8_t repetition) {
 	report[reportIndex].headingX += windSpeed * cos(windHeading);
 	report[reportIndex].headingY += windSpeed * sin(windHeading);
 
+	float headingError = fabs(WB_COMPASS_GetError());
+	diagReport.headingErrorAvg += headingError;
+	diagReport.headingErrorSamplesCount++;
+	if (headingError > diagReport.headingErrorMax) {
+		diagReport.headingErrorMax = headingError;
+	}
 
-	float temperature = (TD_MEASURE_VoltageTemperatureExtended(true) / 10.);
+	float accel[3] = {9999., 9999., 9999.};
+	float temperature = 9999.;
+	if (report[reportIndex].samplesCount % EXTENDED_SAMPLE_EVERY_N_SAMPLES == 0) {
+		WB_ACCELERO_GetRaw(&accel[0], &accel[1], &accel[2]);
+		diagReport.accelXAvg += accel[0];
+		diagReport.accelYAvg += accel[1];
+		diagReport.accelZAvg += accel[2];
+		diagReport.accelXSamplesCount++;
+		diagReport.accelYSamplesCount++;
+		diagReport.accelZSamplesCount++;
 
-	report[reportIndex].tempAvg += temperature;
+		temperature = (TD_MEASURE_VoltageTemperatureExtended(true) / 10.);
+		diagReport.tempAvg += temperature;
+		diagReport.tempSamplesCount++;
+		if (temperature > diagReport.tempMax) diagReport.tempMax = temperature;
+		if (temperature < diagReport.tempMin) diagReport.tempMin = temperature;
+	}
 
 	WB_DEBUG("sample\t%d\t%d\t%d\t%d\t%d\n",
 			(int)(windSpeed*10.),
 			(int)(float)(windHeading/M_PI*180.),
-			(int)temperature,
+			(int)(float)(headingError * 1000.),
 			report[reportIndex].samplesCount,
 			reportIndex);
 
@@ -87,30 +125,25 @@ static void SamplingTimer(uint32_t argument, uint8_t repetition) {
 
 		report[reportIndex].headingAvg = atan2(report[reportIndex].headingY, report[reportIndex].headingX);
 		report[reportIndex].speedAvg /= SAMPLE_PER_REPORT;
-		report[reportIndex].tempAvg /= SAMPLE_PER_REPORT;
 
-		WB_DEBUG("REPORT\t%d\t%d\t%d\t%d\t%d\t%d\n",
+		WB_DEBUG("REPORT\t%d\t%d\t%d\t%d\t%d\n",
 				(int)(report[reportIndex].speedAvg*10.),
 				(int)(report[reportIndex].speedMax*10.),
 				(int)(report[reportIndex].speedMin*10.),
 				(int)(float)(report[reportIndex].headingAvg/M_PI*180.),
-				(int)report[reportIndex].tempAvg,
 				reportIndex);
 
 		switch (WB_RUNMODE_Get()) {
 			case MODE_SIGFOX_5M:
-				WB_SIGFOX_ReportMessage(report, 1);
+				WB_SIGFOX_ReportMessage(report, 1, &diagReport);
 				break;
 			case MODE_SIGFOX_10M:
 				if (reportIndex == REPORT_COUNT-1) {
-					WB_SIGFOX_ReportMessage(report, REPORT_COUNT);
+					WB_SIGFOX_ReportMessage(report, REPORT_COUNT, &diagReport);
 					reportIndex=0;
 				} else {
 					reportIndex++;
 				}
-				break;
-			case MODE_OGN:
-				// todo
 				break;
 		}
 

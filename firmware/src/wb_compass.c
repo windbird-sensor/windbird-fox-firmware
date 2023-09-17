@@ -97,6 +97,8 @@
 #define READBYTE(...) WB_I2C_ReadByte(MC6470_ADDRESS, __VA_ARGS__, WB_I2C_DEFAULT_TIMEOUT)
 #define WRITEBYTE(...) WB_I2C_WriteByte(MC6470_ADDRESS, __VA_ARGS__, WB_I2C_DEFAULT_TIMEOUT)
 
+static float radiusError = 0;
+
 static bool SetPower(bool powerOn) {
 	uint8_t ctrl1;
 	if(!READBYTE(MC6470_CONTROL_1_REG, &ctrl1)) {
@@ -339,7 +341,9 @@ float WB_COMPASS_GetHeading() {
 
 	WB_COMPASS_CALIBRATION_Transform(&x, &y, &z);
 
-	WB_DEBUG("%d\t%d\t%d\t\t%d\t\t", (int)(x*1000.), (int)(y*1000.), (int)(z*1000.), (int)(1. - sqrt(x*x + y*y + z*z)*1000.));
+	radiusError = 1. - sqrt(x*x + y*y + z*z);
+
+	WB_DEBUG("%d\t%d\t%d\t\t%d\t\t", (int)(x*1000.), (int)(y*1000.), (int)(z*1000.), (int)(radiusError*1000.));
 
 	float heading = atan2(z, x);
 	if(heading < 0) heading += 2. * M_PI;
@@ -347,4 +351,8 @@ float WB_COMPASS_GetHeading() {
 	WB_DEBUG("%d\n", (int)(float)(heading/3.14*180.));
 
 	return heading;
+}
+
+float WB_COMPASS_GetError() {
+	return radiusError;
 }

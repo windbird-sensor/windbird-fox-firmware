@@ -15,10 +15,15 @@
  *
  ******************************************************************************/
 
+#include <math.h>
+
 #include <td_sigfox.h>
-#include <td_measure.h>
+
 #include "wb_sigfox.h"
+#include "wb_power.h"
 #include "wb_debug.h"
+#include "wb_led.h"
+#include "wb_version.h"
 
 //#define DEBUG_NO_SIGFOX
 
@@ -43,15 +48,41 @@
 
 #define SIGFOX_STARTUP_MESSAGE 0x10
 #define SIGFOX_SHUTDOWN_MESSAGE 0x20
-#define SIGFOX_MONITORING_MESSAGE 0x30
-#define SIGFOX_CALIBRATION_MESSAGE_A 0x4A
-#define SIGFOX_CALIBRATION_MESSAGE_B 0x4B
 #define SIGFOX_SHORT_REPORT_MESSAGE 0x50
 #define SIGFOX_LOCATION_FAILURE_MESSAGE 0xF0
 #define SIGFOX_LOCATION_MESSAGE 0xFF
 
-static uint8_t message[12];
+#define SIGFOX_DIAG_VERSION 0x01
+#define SIGFOX_DIAG_FIELDS_COUNT 15
+#define SIGFOX_DIAG_ERROR_VAL 0xFF
 
+
+#define SIGFOX_DIAG_VERSION_FIELD 0
+#define SIGFOX_DIAG_VCAP_BEFORE_FIELD 1
+#define SIGFOX_DIAG_VCAP_AFTER_FIELD 2
+#define SIGFOX_DIAG_VBAT_BEFORE_LED_FIELD 3
+#define SIGFOX_DIAG_VBAT_BEFORE_NOLED_FIELD 4
+#define SIGFOX_DIAG_VBAT_AFTER_LED_FIELD 5
+#define SIGFOX_DIAG_VBAT_AFTER_NOLED_FIELD 6
+#define SIGFOX_DIAG_ACC_X_FIELD 7
+#define SIGFOX_DIAG_ACC_Y_FIELD 8
+#define SIGFOX_DIAG_ACC_Z_FIELD 9
+#define SIGFOX_DIAG_HEAD_ERR_AVG_FIELD 10
+#define SIGFOX_DIAG_HEAD_ERR_MAX_FIELD 11
+#define SIGFOX_DIAG_TEMP_AVG_FIELD 12
+#define SIGFOX_DIAG_TEMP_MIN_FIELD 13
+#define SIGFOX_DIAG_TEMP_MAX_FIELD 14
+
+
+int vcapBefore = 0;
+int vcapAfter = 0;
+int vbatBeforeLed = 0;
+int vcapBeforeNoLed = 0;
+int vbatAfterLed = 0;
+int vbatAfterNoLed = 0;
+int initVoltage = true;
+
+static uint8_t message[12];
 
 static uint8_t EncodeWindSpeed (float speed) {
   uint8_t intSpeed;
@@ -72,12 +103,23 @@ static uint8_t EncodeWindSpeed (float speed) {
     // 190 or + : out of range
     intSpeed = 0xFF;
   }
-
   return intSpeed;
 }
 
-static uint8_t EncodeWindHeading (float heading) {
-  return (int)(float)(heading / 0.392699082 + 16.5) % 16;
+static uint8_t EncodeWindHeadingLowRes (float radians) {
+  // 16x 22.5°
+  float degrees = radians / M_PI * 180. + 360.;
+  int degreesInt = (int)(float)round(degrees / 22.5);
+  degreesInt %= 16;
+  return degreesInt;
+}
+
+static uint8_t EncodeWindHeadingHighRes (float radians) {
+  // 180x 2°
+  float degrees = radians / M_PI * 180 + 360.;
+  int degreesInt = (int)(float)round(degrees / 2.);
+  degreesInt %= 180;
+  return degreesInt;
 }
 
 static uint16_t EncodePressure (float pressure) {
@@ -93,16 +135,139 @@ static uint16_t EncodePressure (float pressure) {
 
 
 static uint8_t EncodeTemperature(float temperature) {
-        // should never be < -50 or > 100
-  return (uint8_t)(float)(temperature + 50.5);
+	// -50 to 75degC, 0.5degC resolution
+	temperature += 50.;
+	temperature *= 2.;
+	int tempInt = round(temperature);
+	if (tempInt < 0) return 0;
+	if (temperature > 254) return 254;
+	return tempInt;
 }
 
-static uint8_t EncodeVoltage(uint32_t milliVolts) {
-  return (uint8_t)(float)((milliVolts / 10. + 0.5) - 200.);
+static uint8_t EncodeVoltage(float milliVolts) {
+	// 1.75 to 4.3 V.
+	milliVolts /= 10.;
+	milliVolts -= 175.;
+	int millivoltsInt = round(milliVolts);
+	if (millivoltsInt < 0) return 0;
+	if (millivoltsInt > 254) return 254;
+	return millivoltsInt;
 }
+
+static uint8_t EncodeAccelero(float acc) {
+	// already -128 to 127
+	int accInt = round(acc) + 128.;
+	if (accInt < 0) return 0;
+	if (accInt > 254) return 254;
+	return accInt;
+}
+
+static uint8_t EncodeHeadingError(float error) {
+	// radius error, always positive
+	// 0.010 = 1%
+	// 0.001 to 255%
+	error *= 1000.;
+	int errorInt = round(error);
+	if (errorInt < 0) return 0; // should never happen
+	if (errorInt > 254) return 254;
+	return errorInt;
+}
+
 
 static void EncodeFloat(uint8_t *target, float *value) {
   memcpy(target, value, sizeof(float));
+}
+
+static int DiagBatteryMillivoltsLedOn() {
+	WB_LED_Set();
+	TD_RTC_Delay(TMS(100));
+	int mv = WB_POWER_GetBatteryMillivolts();
+	WB_LED_Clear();
+	return mv;
+}
+
+static uint8_t EncodeDiag(WB_REPORTS_DiagReport_t *r, int sequenceNumber) {
+	WB_DEBUG("*** diagReport ***\n");
+	WB_DEBUG("accelXAvg: %d\n", (int)r->accelXAvg);
+	WB_DEBUG("accelYAvg: %d\n", (int)r->accelYAvg);
+	WB_DEBUG("accelZAvg: %d\n", (int)r->accelZAvg);
+	WB_DEBUG("accelXSamplesCount: %d\n", (int)r->accelXSamplesCount);
+	WB_DEBUG("accelYSamplesCount: %d\n", (int)r->accelYSamplesCount);
+	WB_DEBUG("accelZSamplesCount: %d\n", (int)r->accelZSamplesCount);
+	WB_DEBUG("headingErrorAvg: %d\n", (int)(float)(r->headingErrorAvg*1000.));
+	WB_DEBUG("headingErrorSamplesCount: %d\n", (int)r->headingErrorSamplesCount);
+	WB_DEBUG("headingErrorMax: %d\n", (int)(float)(r->headingErrorMax*1000.));
+	WB_DEBUG("tempAvg: %d\n", (int)r->tempAvg);
+	WB_DEBUG("tempSamplesCount: %d\n", (int)r->tempSamplesCount);
+	WB_DEBUG("tempMin: %d\n", (int)r->tempMin);
+	WB_DEBUG("tempMax: %d\n", (int)r->tempMax);
+
+	uint8_t out;
+	switch (sequenceNumber % SIGFOX_DIAG_FIELDS_COUNT) {
+		case SIGFOX_DIAG_VERSION_FIELD:
+			out = SIGFOX_DIAG_VERSION; // version
+			break;
+		case SIGFOX_DIAG_ACC_X_FIELD:
+			out = EncodeAccelero(r->accelXAvg / r->accelXSamplesCount);
+			r->accelXSamplesCount = 0;
+			r->accelXAvg = 0;
+			break;
+		case SIGFOX_DIAG_ACC_Y_FIELD:
+			out = EncodeAccelero(r->accelYAvg / r->accelYSamplesCount);
+			r->accelYSamplesCount = 0;
+			r->accelYAvg = 0;
+			break;
+		case SIGFOX_DIAG_ACC_Z_FIELD:
+			out = EncodeAccelero(r->accelZAvg / r->accelZSamplesCount);
+			r->accelZSamplesCount = 0;
+			r->accelZAvg = 0;
+			break;
+		case SIGFOX_DIAG_HEAD_ERR_AVG_FIELD:
+			out = EncodeHeadingError(r->headingErrorAvg / r->headingErrorSamplesCount);
+			r->headingErrorAvg = 0;
+			r->headingErrorSamplesCount = 0;
+			break;
+		case SIGFOX_DIAG_HEAD_ERR_MAX_FIELD:
+			out = EncodeHeadingError(r->headingErrorMax);
+			r->headingErrorMax = -9999;
+			break;
+		case SIGFOX_DIAG_TEMP_AVG_FIELD:
+			out = EncodeTemperature(r->tempAvg / r->tempSamplesCount);
+			r->tempAvg = 0;
+			r->tempSamplesCount = 0;
+			break;
+		case SIGFOX_DIAG_TEMP_MIN_FIELD:
+			out = EncodeTemperature(r->tempMin);
+			r->tempMin = 9999;
+			break;
+		case SIGFOX_DIAG_TEMP_MAX_FIELD:
+			out = EncodeTemperature(r->tempMax);
+			r->tempMax = -9999;
+			break;
+		case SIGFOX_DIAG_VCAP_BEFORE_FIELD:
+			out = EncodeVoltage(vcapBefore);
+			break;
+		case SIGFOX_DIAG_VCAP_AFTER_FIELD:
+			out = EncodeVoltage(vcapAfter);
+			break;
+		case SIGFOX_DIAG_VBAT_BEFORE_LED_FIELD:
+			out = EncodeVoltage(vbatBeforeLed);
+			break;
+		case SIGFOX_DIAG_VBAT_BEFORE_NOLED_FIELD:
+			out = EncodeVoltage(vcapBeforeNoLed);
+			break;
+		case SIGFOX_DIAG_VBAT_AFTER_LED_FIELD:
+			out = EncodeVoltage(vbatAfterLed);
+			break;
+		case SIGFOX_DIAG_VBAT_AFTER_NOLED_FIELD:
+			out = EncodeVoltage(vbatAfterNoLed);
+			break;
+		default:
+			WB_DEBUG("unexpected seq number modulo\n");
+			out = SIGFOX_DIAG_ERROR_VAL;
+	}
+	WB_DEBUG("OUT %d : %02x\n", sequenceNumber % SIGFOX_DIAG_FIELDS_COUNT, out);
+	return out;
 }
 
 void WB_SIGFOX_Init () {
@@ -111,30 +276,28 @@ void WB_SIGFOX_Init () {
 
 }
 
-void WB_SIGFOX_StartupMessage (float windSpeed, float windHeading, uint32_t voltage) {
+void WB_SIGFOX_StartupMessage (float windSpeed, float windHeading, uint32_t vbatNoLed, uint32_t vbatLed, uint32_t vcapEarlyBoot, uint32_t vcapNow) {
 
-  message[0]= SIGFOX_STARTUP_MESSAGE | EncodeWindHeading(windHeading);
+  //message[0]=SIGFOX_STARTUP_MESSAGE
+  message[0]=EncodeWindHeadingHighRes(windHeading);
   message[1]=EncodeWindSpeed(windSpeed);
-  message[2]=EncodeVoltage(voltage);
-
-  // embed compilation date in startup message
-  //MMM DD YYYY
-  //01234567890
-  message[3]=__DATE__[0];
-  message[4]=__DATE__[1];
-  message[5]=__DATE__[2];
-  message[6]=__DATE__[4];
-  message[7]=__DATE__[5];
-  message[8]=__DATE__[9];
-  message[9]=__DATE__[10];
-
+  message[2]=EncodeVoltage(vbatNoLed);
+  message[3]=EncodeVoltage(vbatLed);
+  message[4]=EncodeVoltage(vcapNow);
+  message[5]=EncodeVoltage(vcapEarlyBoot);
+  message[6]=WB_FIRMWARE_VERSION & 0xFF;
+  message[7]=(WB_FIRMWARE_VERSION >> 8) & 0xFF;
+  message[8]=(WB_FIRMWARE_VERSION >> 16) & 0xFF;
+  message[9]=(WB_FIRMWARE_VERSION >> 24) & 0xFF;
   SIGFOX_SEND(message, 10);
 }
 
-void WB_SIGFOX_ShutdownMessage (uint32_t voltage) {
+void WB_SIGFOX_ShutdownMessage (uint32_t vbatNoLed, uint32_t vbatLed, uint32_t vcapNow) {
   message[0]= SIGFOX_SHUTDOWN_MESSAGE;
-  message[1]=EncodeVoltage(voltage);
-  SIGFOX_SEND(message, 2);
+  message[1]=EncodeVoltage(vbatNoLed);
+  message[2]=EncodeVoltage(vbatLed);
+  message[3]=EncodeVoltage(vcapNow);
+  SIGFOX_SEND(message, 4);
 }
 
 void WB_SIGFOX_LocationMessage (WB_GPS_Fix_t fix) {
@@ -158,24 +321,30 @@ void WB_SIGFOX_LocationFailureMessage () {
   SIGFOX_SEND(message, 1);
 }
 
-void WB_SIGFOX_ReportMessage(WB_REPORTS_Report_t *report, uint8_t reportCount) {
+void WB_SIGFOX_ReportMessage(WB_REPORTS_Report_t *report, uint8_t reportCount, WB_REPORTS_DiagReport_t *diagReport) {
+
+	int sequenceNumber = TD_SIGFOX_GetNextSequenceWithoutInc();
+	WB_DEBUG("next sequence: %d\n", sequenceNumber);
 
 	uint8_t headingAvg[2];
 	uint8_t speedMax[2];
 	uint8_t speedMin[2];
 	uint8_t speedAvg[2];
-	float tempAvg = 0;
+
+	if (sequenceNumber % SIGFOX_DIAG_FIELDS_COUNT == 0 || initVoltage) {
+		vcapBefore = WB_POWER_GetCapacitorMillivolts();
+		vcapBeforeNoLed = WB_POWER_GetBatteryMillivolts();
+		vbatBeforeLed = DiagBatteryMillivoltsLedOn();
+	}
 
 	if (reportCount == 2) {
 		int i;
 		for (i=0; i<reportCount; i++) {
-		headingAvg[i] = EncodeWindHeading(report[i].headingAvg);
-		speedMax[i] = EncodeWindSpeed(report[i].speedMax);
-		speedMin[i] = EncodeWindSpeed(report[i].speedMin);
-		speedAvg[i] = EncodeWindSpeed(report[i].speedAvg);
-		tempAvg += report[i].tempAvg;
+			headingAvg[i] = EncodeWindHeadingLowRes(report[i].headingAvg);
+			speedMax[i] = EncodeWindSpeed(report[i].speedMax);
+			speedMin[i] = EncodeWindSpeed(report[i].speedMin);
+			speedAvg[i] = EncodeWindSpeed(report[i].speedAvg);
 		}
-		tempAvg /= reportCount;
 
 		message[0] = speedMin[0];
 		message[1] = speedMin[1];
@@ -184,48 +353,26 @@ void WB_SIGFOX_ReportMessage(WB_REPORTS_Report_t *report, uint8_t reportCount) {
 		message[4] = speedMax[0];
 		message[5] = speedMax[1];
 		message[6] = (headingAvg[0] << 4) | headingAvg[1];
-		message[7] = EncodeTemperature(tempAvg);
+		message[7] = EncodeDiag(diagReport, sequenceNumber);
 		SIGFOX_SEND(message, 8);
 	} else {
-		headingAvg[0] = EncodeWindHeading(report[0].headingAvg);
+		headingAvg[0] = EncodeWindHeadingHighRes(report[0].headingAvg);
 		speedMax[0] = EncodeWindSpeed(report[0].speedMax);
 		speedMin[0] = EncodeWindSpeed(report[0].speedMin);
 		speedAvg[0] = EncodeWindSpeed(report[0].speedAvg);
-		tempAvg = report[0].tempAvg;
 
 		message[0] = SIGFOX_SHORT_REPORT_MESSAGE;
 		message[1] = speedMin[0];
 		message[2] = speedAvg[0];
 		message[3] = speedMax[0];
-		message[4] = headingAvg[1];
-		message[5] = EncodeTemperature(tempAvg);
+		message[4] = headingAvg[0];
+		message[5] = EncodeDiag(diagReport, sequenceNumber);
 		SIGFOX_SEND_NORETRY(message, 6);
 	}
-}
-
-void WB_SIGFOX_MonitoringMessage(float tempMin, float tempAvg, float tempMax, float voltageMin, float voltageAvg, float voltageMax) {
-
-  message[0]=SIGFOX_MONITORING_MESSAGE;
-  message[1]=EncodeTemperature(tempMin);
-  message[2]=EncodeTemperature(tempAvg);
-  message[3]=EncodeTemperature(tempMax);
-  message[4]=EncodeVoltage(voltageMin);
-  message[5]=EncodeVoltage(voltageAvg);
-  message[6]=EncodeVoltage(voltageMax);
-
-  SIGFOX_SEND(message, 7);
-}
-
-void WB_SIGFOX_CalibrationMessage(float yOffset, float yScale, float zOffset, float zScale) {
-
-  message[0]=SIGFOX_CALIBRATION_MESSAGE_A;
-  EncodeFloat(&message[1], &yOffset);
-  EncodeFloat(&message[5], &yScale);
-  SIGFOX_SEND(message, 9);
-
-  message[0]=SIGFOX_CALIBRATION_MESSAGE_B;
-  EncodeFloat(&message[1], &zOffset);
-  EncodeFloat(&message[5], &zScale);
-  SIGFOX_SEND(message, 9);
-
+	if (sequenceNumber % SIGFOX_DIAG_FIELDS_COUNT == 0 || initVoltage) {
+		vcapAfter = WB_POWER_GetCapacitorMillivolts();
+		vbatAfterNoLed = WB_POWER_GetBatteryMillivolts();
+		vbatAfterLed = DiagBatteryMillivoltsLedOn();
+		initVoltage = false;
+	}
 }

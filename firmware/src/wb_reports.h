@@ -27,9 +27,24 @@ typedef struct {
 	float headingX;
 	float headingY;
 	float headingAvg;
-	float tempAvg;
-	uint8_t samplesCount;
+	int samplesCount;
 } WB_REPORTS_Report_t;
+
+typedef struct {
+	float accelXAvg;
+	float accelYAvg;
+	float accelZAvg;
+	int accelXSamplesCount;
+	int accelYSamplesCount;
+	int accelZSamplesCount;
+	float headingErrorAvg;
+	int headingErrorSamplesCount;
+	float headingErrorMax;
+	float tempAvg;
+	int tempSamplesCount;
+	float tempMin;
+	float tempMax;
+} WB_REPORTS_DiagReport_t;
 
 void WB_REPORTS_Init();
 void WB_REPORTS_Start();
