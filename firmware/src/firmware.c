@@ -116,7 +116,7 @@ static void Calibration() {
 			return;
 		}
 		WB_COMPASS_GetRaw(&sample[0], &sample[1], &sample[2]);
-		//TD_WATCHDOG_Feed();
+		TD_WATCHDOG_Feed();
 		switch (WB_COMPASS_CALIBRATION_AddSample(sample)) {
 			case WB_COMPASS_CALIBRATION_AQUISITION_COMPLETE:
 				sampling = false;
@@ -132,6 +132,7 @@ static void Calibration() {
 		TD_RTC_Delay(TMS(100));
 		WB_LED_Set();
 		//TD_RTC_Delay(TMS(50));
+		timeout--;
 	};
 
 	WB_COMPASS_CALIBRATION_End();
@@ -188,7 +189,9 @@ static void ButtonLoop() {
 				WB_LED_Clear();
 				TD_RTC_Delay(TMS(100));
 			}
-			/*if (WB_BUTTON_Loop() == WB_BUTTON_PRESSED_SETTINGS) {
+			/*
+			TD_WATCHDOG_Feed();
+			if (WB_BUTTON_Loop() == WB_BUTTON_PRESSED_SETTINGS) {
 				// did we continue pressing for a second period?
 				WB_DEBUG("button settings 2\n");
 				WB_DEBUG("mode change\n");
