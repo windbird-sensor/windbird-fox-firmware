@@ -45,6 +45,9 @@
 #define MC6470_ACC_SRTFR_RATE_05HZ_MASK 0x06
 #define MC6470_ACC_SRTFR_RATE_025HZ_MASK 0x07
 
+#define MC6470_ACC_OUTCFG_REG 0x20
+#define MC6470_ACC_OUTCFG_RES_8B_MASK 0x02
+
 #define READBYTES(...) WB_I2C_ReadBytes(MC6470_ACC_ADDRESS, __VA_ARGS__, WB_I2C_DEFAULT_TIMEOUT)
 #define READBYTE(...) WB_I2C_ReadByte(MC6470_ACC_ADDRESS, __VA_ARGS__, WB_I2C_DEFAULT_TIMEOUT)
 #define WRITEBYTE(...) WB_I2C_WriteByte(MC6470_ACC_ADDRESS, __VA_ARGS__, WB_I2C_DEFAULT_TIMEOUT)
@@ -87,6 +90,17 @@ static bool SetSampleRate() {
 	return true;
 }
 
+
+static bool SetResolution() {
+	// 8 bits
+	// todo : handle other resolutions and other OUTCFG flags
+	if(!WRITEBYTE(MC6470_ACC_OUTCFG_REG, MC6470_ACC_OUTCFG_RES_8B_MASK)) {
+		WB_DEBUG("!!! I2C ERROR !!! Can't write to MC6470_ACC_OUTCFG_REG\n");
+		return false;
+	}
+	return true;
+}
+
 void WB_ACCELERO_Init() {
 	WB_DEBUG("Accelero init\n");
 	if (WB_ACCELERO_Test()) {
@@ -96,30 +110,22 @@ void WB_ACCELERO_Init() {
 	}
 	SetAwake(0);
 	SetSampleRate();
-
-
-	if(!WRITEBYTE(0x20, 5)) {
-		WB_DEBUG("!!! I2C ERROR !!! Can't write to MC6470_ACC_SRTFR_REG\n");
-	}
-
-
-	//SetAwake(1);
-
+	SetResolution();
 }
 
 bool WB_ACCELERO_Test() {
 	return GetStatus() != 0xFF;
 }
 
-bool WB_ACCELERO_GetRaw(int *x, int *y, int *z) {
-	//SampleReady(); // clear sample ready flag if already set
+bool WB_ACCELERO_GetRaw(float *x, float *y, float *z) {
+	SampleReady(); // clear sample ready flag if already set
 
 	//if (!SetAwake(true)) return false;
 	SetAwake(1);
-	TD_RTC_Delay(TMS(35));
+	TD_RTC_Delay(TMS(30));
 	bool result = false;
 	do {
-		/*int retry;
+		int retry;
 		for (retry=5; retry>0; retry--) {
 			TD_RTC_Delay(TMS(5));
 			if (SampleReady()) break;
@@ -128,7 +134,7 @@ bool WB_ACCELERO_GetRaw(int *x, int *y, int *z) {
 		if (retry == 0) {
 			WB_DEBUG("accelero measurement timeout\n");
 			break;
-		}*/
+		}
 
 		// Read measurements
 
@@ -138,9 +144,9 @@ bool WB_ACCELERO_GetRaw(int *x, int *y, int *z) {
 			break;
 		}
 
-		*x = (int)(int16_t)measurementsBuffer[0];
-		*y = (int)(int16_t)measurementsBuffer[1];
-		*z = (int)(int16_t)measurementsBuffer[2];
+		*x = (float)(int16_t)measurementsBuffer[0];
+		*y = (float)(int16_t)measurementsBuffer[1];
+		*z = (float)(int16_t)measurementsBuffer[2];
 		// casting two uint8 (LSB and MSB) into one int16
 		// Results are always little endian
 

@@ -14,6 +14,6 @@
 void WB_ACCELERO_Init();
 bool WB_ACCELERO_Test();
 void WB_ACCELERO_TestCalibration();
-bool WB_ACCELERO_GetRaw(int *x, int *y, int *z);
+bool WB_ACCELERO_GetRaw(float *x, float *y, float *z);
 
 #endif /* WB_ACCELERO_H_ */
