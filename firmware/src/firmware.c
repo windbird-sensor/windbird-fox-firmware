@@ -24,6 +24,7 @@
 #include <td_sigfox.h>
 #include <td_utils.h>
 #include <td_scheduler.h>
+#include <td_watchdog.h>
 
 #include "wb_debug.h"
 #include "wb_led.h"
@@ -107,7 +108,13 @@ static void Calibration() {
 
 	float sample[3];
 	bool sampling = true;
+	int timeout = 3000; // 5 minutes, with 100ms delay per loop
 	while (sampling) {
+		if (WB_BUTTON_Loop() == WB_BUTTON_PRESSED_POWER_SWITCH || timeout == 0) {
+			// abort calibration
+			WB_LED_Clear();
+			return;
+		}
 		WB_COMPASS_GetRaw(&sample[0], &sample[1], &sample[2]);
 		//TD_WATCHDOG_Feed();
 		switch (WB_COMPASS_CALIBRATION_AddSample(sample)) {

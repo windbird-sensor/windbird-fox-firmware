@@ -28,7 +28,7 @@
 
 #define N_ACQ_SAMPLES 30
 #define N_ACQ_REPEAT 3
-#define SAMPLES_MIN_DISTANCE 70
+#define SAMPLES_MIN_DISTANCE 80
 
 #define N_ITERATIONS 7
 
