@@ -235,20 +235,11 @@ void TD_USER_Setup(void) {
 		uint32_t vcap = WB_POWER_GetCapacitorMillivolts();
 		uint32_t vbat = WB_POWER_GetBatteryMillivolts();
 		WB_DEBUG("vcap: %d mV \t %d mV\n", vcap, vbat);
-		if (vcap < 2500) {
+		if (vcap < 2900) {
 			WB_LED_Set();
-			TD_RTC_Delay(TMS(10));
-			WB_LED_Clear();
-			TD_RTC_Delay(TMS(1990));
-		} else if (vcap < 2900) {
-			WB_LED_Set();
-			TD_RTC_Delay(TMS(10));
-			WB_LED_Clear();
 			TD_RTC_Delay(TMS(100));
-			WB_LED_Set();
-			TD_RTC_Delay(TMS(10));
 			WB_LED_Clear();
-			TD_RTC_Delay(TMS(1880));
+			TD_RTC_Delay(TMS(500));
 		} else {
 			break;
 		}
