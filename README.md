@@ -1,8 +1,20 @@
 # windbird-fox-firmware
 Source files for the Windbird Fox Firmware
 
-# TOTAL REWRITE IN PROGRESS
+# V1
+**See the `v1` branch for the current firmware in production:**<br>
+https://github.com/windbird-sensor/windbird-fox-firmware/tree/v1
 
+Binaries are here:<br>
+https://github.com/windbird-sensor/windbird-fox-firmware/releases
+
+Instructions for firmware upgrade over USB/UART:<br>
+https://github.com/windbird-sensor/windbird-fox-firmware/tree/v1/usb-flasher
+
+# V2
+This `main` branch contains the total rewrite of the code.
+
+This is work in progress. It doesn't work yet.
 
 ## License
 
