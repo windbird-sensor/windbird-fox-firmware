@@ -1,15 +1,13 @@
-# windbird-firmware
-Source files for the Windbird Firmware
+# windbird-fox-firmware
+Source files for the Windbird Fox firmware V1
 
-
+Currently in production
 
 ## License
 
 Copyright (c) 2015 Bac Plus Zéro SAS
-
 Copyright (c) 2016 Altostratus SA
-
-Copyright (c) 2021-2022 OpenWindMap SCIC SA and contributors
+Copyright (c) 2021-2023 OpenWindMap SCIC SA and contributors
 
 **Permission is granted to anyone to use this Material for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:**
 
