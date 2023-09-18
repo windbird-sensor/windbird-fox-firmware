@@ -8,7 +8,8 @@
 #ifndef WB_VERSION_H_
 #define WB_VERSION_H_
 
-//                          0000000000
-#define WB_FIRMWARE_VERSION 1111111111
+//                          000000000
+#define WB_FIRMWARE_VERSION 111111111
+
 
 #endif /* WB_VERSION_H_ */

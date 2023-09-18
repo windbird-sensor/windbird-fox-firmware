@@ -219,10 +219,10 @@ void TD_USER_Setup(void) {
 	// init serial port for GPS and DEBUG.
 	init_printf(TD_UART_Init(9600, true, false), TD_UART_Putc, TD_UART_Start, TD_UART_Stop);
 
-	WB_DEBUG("*** HELLO ***\n");
-	WB_DEBUG("Device ID  : %x\n", TD_SIGFOX_GetId());
-	WB_DEBUG("Firmware version  : %d\n", WB_FIRMWARE_VERSION);
-	WB_DEBUG("Compilation  : %s %s\n", __DATE__, __TIME__);
+	tfp_printf("*** HELLO ***\n");
+	tfp_printf("Device ID  : %x\n", TD_SIGFOX_GetId());
+	tfp_printf("Firmware version  : %d\n", (uint32_t)WB_FIRMWARE_VERSION);
+	tfp_printf("Compilation  : %s %s\n", __DATE__, __TIME__);
 
 	WB_POWER_Init();
 	WB_LED_Init();
@@ -257,7 +257,7 @@ void TD_USER_Setup(void) {
 	WB_ACCELERO_Init();
 	WB_SIGFOX_Init();
 	WB_PROPELLER_Init();
-
+	tfp_printf("*** INIT OK ***\n");
 
 
 	uint32_t vbatNoLed = WB_POWER_GetBatteryMillivolts();
