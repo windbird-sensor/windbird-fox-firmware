@@ -34,13 +34,15 @@
 #include "wb_compass.h"
 #include "wb_compass_calibration.h"
 #include "wb_accelero.h"
-#include "wb_sigfox.h"
+#include "wb_network.h"
 #include "wb_propeller.h"
 #include "wb_reports.h"
 #include "wb_monitoring.h"
 #include "wb_power.h"
 #include "wb_runmode.h"
 #include "wb_version.h"
+
+#include "wb_ext_lora.h"
 
 #define MODULE_REVISION REVISION_TD1208
 #define PRODUCT_LED_PORT LED_PORT
@@ -87,7 +89,7 @@ static void Shutdown(bool earlyShutdown) {
 	WB_LED_Fade(WB_LED_FADE_OUT, 1500);
 
 	if (!earlyShutdown) {
-		WB_SIGFOX_ShutdownMessage(vbatNoLed, vbatLed, vcap);
+		WB_NETWORK_ShutdownMessage(vbatNoLed, vbatLed, vcap);
 	}
 
 	WB_POWER_DisableVAUX();
@@ -149,10 +151,10 @@ static void SwitchMode() {
 	mode = (mode + 1) % WB_RUNMODE_MAX_SWITCHABLE;
 	int nBlinks = 0;
 	switch(mode) {
-		case MODE_SIGFOX_5M:
+		case MODE_NETWORK_5M:
 			nBlinks = 5;
 			break;
-		case MODE_SIGFOX_10M:
+		case MODE_NETWORK_10M:
 			nBlinks = 10;
 			break;
 		default:
@@ -219,8 +221,10 @@ void TD_USER_Setup(void) {
 	// init serial port for GPS and DEBUG.
 	init_printf(TD_UART_Init(9600, true, false), TD_UART_Putc, TD_UART_Start, TD_UART_Stop);
 
+	WB_EXT_LORA_SetLowPower(); // we want this before capacitor charging and before printing a lot of stuff
+
 	tfp_printf("*** HELLO ***\n");
-	tfp_printf("Device ID  : %x\n", TD_SIGFOX_GetId());
+	tfp_printf("Sigfox ID  : %x\n", TD_SIGFOX_GetId());
 	tfp_printf("Firmware version  : %d\n", (uint32_t)WB_FIRMWARE_VERSION);
 	tfp_printf("Compilation  : %s %s\n", __DATE__, __TIME__);
 
@@ -250,19 +254,19 @@ void TD_USER_Setup(void) {
 		TD_SCHEDULER_Process();
 	}
 
+	uint32_t vbatNoLed = WB_POWER_GetBatteryMillivolts();
+	WB_LED_Set();
+
 	WB_REPORTS_Init();
 	WB_GPS_Init();
 	WB_I2C_Init();
 	WB_COMPASS_Init();
 	WB_ACCELERO_Init();
-	WB_SIGFOX_Init();
+	WB_EXT_LORA_Init();
+	WB_NETWORK_Init();
 	WB_PROPELLER_Init();
 	tfp_printf("*** INIT OK ***\n");
 
-
-	uint32_t vbatNoLed = WB_POWER_GetBatteryMillivolts();
-
-	WB_LED_Set();
 	TD_RTC_Delay(TMS(3000)); // wait for windspeed acquisition
 	float windSpeed = WB_PROPELLER_GetSpeed();
 	float windHeading = WB_COMPASS_GetHeading();
@@ -270,7 +274,7 @@ void TD_USER_Setup(void) {
 	uint32_t vbatLed = WB_POWER_GetBatteryMillivolts();
 	uint32_t vcapNow = WB_POWER_GetCapacitorMillivolts();
 
-	WB_SIGFOX_StartupMessage(windSpeed, windHeading, vbatNoLed, vbatLed, vcapEarlyBoot, vcapNow);
+	WB_NETWORK_StartupMessage(windSpeed, windHeading, vbatNoLed, vbatLed, vcapEarlyBoot, vcapNow);
 
 	WB_LED_Clear();
 
@@ -288,9 +292,13 @@ void TD_USER_Setup(void) {
 }
 
 void TD_USER_Loop(void) {
-	WB_DEBUG("*** loop ***\tvcap: %d\tvbat: %d\n",
-			WB_POWER_GetCapacitorMillivolts(),
-			WB_POWER_GetBatteryMillivolts());
+	// LoRa Ext : Any serial output here will trigger an answer
+	// of the lora module and this answer will wake the mcu,
+	// triggering an infinite loop
+
+	//  WB_DEBUG("*** loop ***\tvcap: %d\tvbat: %d\n",
+	//		WB_POWER_GetCapacitorMillivolts(),
+	//		WB_POWER_GetBatteryMillivolts());
 	ButtonLoop();
 }
 

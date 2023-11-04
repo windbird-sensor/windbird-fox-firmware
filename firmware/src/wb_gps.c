@@ -25,7 +25,7 @@
 
 #include "wb_gps.h"
 #include "wb_debug.h"
-#include "wb_sigfox.h"
+#include "wb_network.h"
 
 #define GPS_POWER_PORT gpioPortC
 #define GPS_POWER_BIT 1
@@ -344,7 +344,7 @@ bool WB_GPS_Locate() {
 	if (hasTimedOutEvent || (ListenNMEA() && (GetFixQuality() < 3 || fixesCount > 10))) {
 		if (fixesCount < FIXES_SIZE) {
 			WB_DEBUG("GPS TIMED OUT %d %d\n", fixesCount, GetFixQuality());
-			WB_SIGFOX_LocationFailureMessage ();
+			WB_NETWORK_LocationFailureMessage ();
 		} else {
 			WB_DEBUG("GPS SUCCESS %d %d\n", fixesCount, GetFixQuality());
 			WB_GPS_Fix_t fix;
@@ -365,7 +365,7 @@ bool WB_GPS_Locate() {
 
 			WB_DEBUG("%d\t%d\t%d\t%d\n", fix.latitude, fix.longitude, fix.altitude, fix.hdop);
 
-			WB_SIGFOX_LocationMessage(fix);
+			WB_NETWORK_LocationMessage(fix);
 		}
 		return true;
 	}

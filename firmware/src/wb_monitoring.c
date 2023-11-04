@@ -20,7 +20,6 @@
 #include <td_rtc.h>
 #include "wb_reports.h"
 #include "wb_debug.h"
-#include "wb_sigfox.h"
 #include "wb_gps.h"
 #include "wb_button.h"
 #include "wb_reports.h"

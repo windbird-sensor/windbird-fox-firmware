@@ -10,8 +10,8 @@
 
 typedef enum {
 	// --- switchable runmodes on button press ---
-	MODE_SIGFOX_10M,
-	MODE_SIGFOX_5M
+	MODE_NETWORK_10M,
+	MODE_NETWORK_5M
 	// --- non-switchable runmodes ---
 	// ex: calibration, test...
 } WB_RUNMODE_mode_t;

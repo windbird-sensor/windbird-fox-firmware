@@ -10,7 +10,7 @@
 #include "wb_runmode.h"
 #include "wb_debug.h"
 
-#define MODE_DEFAULT MODE_SIGFOX_10M
+#define MODE_DEFAULT MODE_NETWORK_10M
 
 static WB_RUNMODE_mode_t currentMode;
 

@@ -17,10 +17,11 @@
 #ifndef WB_DEBUG_H_
 #define WB_DEBUG_H_
 
+#include <td_printf.h>
+
 #define DEBUG_WINDBIRD
 
 #ifdef DEBUG_WINDBIRD
-#include <td_printf.h>
 #define WB_DEBUG(...) tfp_printf(__VA_ARGS__)
 #define WB_DEBUG_DUMP(...) tfp_dump(__VA_ARGS__)
 #else
